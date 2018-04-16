@@ -48,7 +48,6 @@ def get_static_file(path="index.html"):
 #
 
 scans = {} # scan-id : scan
-next_scan_id = 1
 
 @post("/scan")
 @enable_javascript_access
@@ -61,12 +60,12 @@ def app_scan_one_page():
     scanner2 = get_scanners()[scanner1_id]
     scan = scan_one_page(scanner1, scanner2)
     scans[scan.id] = scan
-    return {"scans" : {scan.id: scan.toJSON()}}
+    return return_json({"scans" : {scan.id: scan.toJSON()}})
 
 
 @get("/scanners.json")
 def get_the_avaliable_scanners():
-    return {"scanners": {id: scanner.toJSON() for id, scanner in get_scanners().items()}}
+    return return_json({"scanners": {id: scanner.toJSON() for id, scanner in get_scanners().items()}})
 
 
 #
