@@ -60,6 +60,7 @@ class FakeFixedImageScanner:
     def __init__(self, name):
         """Create a fixed image scanner."""
         self.name = name
+        self.scan_result = ScanResult()
     
     def toJSON(self):
         """Return the JSON representation of the scanner with more information."""
@@ -73,16 +74,18 @@ class FakeFixedImageScanner:
     
     def get_scan(self):
         """Return the scan result."""
-        return ScanResult()
-    
+        return self.scan_result
+
+FakeFixedImageScanner1 = FakeFixedImageScanner("Test-Scanner 1")
+FakeFixedImageScanner2 = FakeFixedImageScanner("Test-Scanner 1")
 
 def get_scanners():
     """Get the available scanners.
     
     Returns a mapping from scanner ID  to scanner object.
     """
-    return {"TestScanner1": FakeFixedImageScanner("Test-Scanner 1"),
-            "TestScanner2": FakeFixedImageScanner("Test-Scanner 2")}
+    return {"TestScanner1": FakeFixedImageScanner1,
+            "TestScanner2": FakeFixedImageScanner2}
 
 
 
