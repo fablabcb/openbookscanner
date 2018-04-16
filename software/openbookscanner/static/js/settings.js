@@ -8,6 +8,7 @@ function updateScannerSelection(select) {
   var informationId = select.id + "-info";
   var information = document.getElementById(informationId);
   var selectedOption = select.options[select.selectedIndex];
+  removeAllChildren(information);
   if (selectedOption) {
     var scanner = selectedOption.scanner;
     if (scanner.isScannerHardware) {
@@ -15,6 +16,13 @@ function updateScannerSelection(select) {
     } else {
       information.innerText = "Softwarescanner zum Testen";
     }
+    resolveReference(scanner.lastScan.id, function(scan){
+      if (scan.isScan) {
+        var img = document.createElement("img");
+        img.src = scan.image;
+        information.appendChild(img);
+      }
+    });
   }
 }
 

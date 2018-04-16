@@ -37,6 +37,9 @@ function getScanners(onSuccess, onError) {
   }, onError);
 }
 
-
+function resolveReference(id, onSuccess, onError) {
+  // get the referenced object
+  requestJSON("GET", "/ref/" + id, {}, onSuccess, onError);
+}
 
 

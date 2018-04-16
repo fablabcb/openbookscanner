@@ -1,7 +1,7 @@
 from bottle import run, route, get, static_file, response, post
 import os
 from openbookscanner.scanner import (
-    get_scanners, scan_one_page, update_local_scanners
+    get_scanners, scan_one_page, update_local_scanners, get_by_id
 )
 import json
 
@@ -69,6 +69,23 @@ def app_scan_one_page():
 def get_the_avaliable_scanners():
     return return_json({"scanners": {id: scanner.toJSON() for id, scanner in get_scanners().items()}})
 
+
+@get("/ref/<id>")
+def get_reference(id):
+    """Call a reference function."""
+    reference = get_by_id(id)
+    assert reference is not None, "Reference \"{}\" could not be resolved.".format(id)
+    return reference.toJSON()
+
+
+@get("/ref/<id>/<name>")
+def call_reference(id, name):
+    """Call a reference function."""
+    reference = get_by_id(id)
+    assert reference is not None, "Reference \"{}\" could not be resolved.".format(id)
+    function_name = "GET_" + name
+    function = getattr(reference, function_name)
+    return function()
 
 #
 # Get the source code.

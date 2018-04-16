@@ -6,6 +6,10 @@ Interaction with the scanners.
 import subprocess
 from weakref import WeakValueDictionary
 from concurrent.futures import ThreadPoolExecutor
+import os
+
+HERE = os.path.dirname(__file__) or os.getcwd()
+EXAMPLE_IMAGE = os.path.join(HERE, "static", "img", "test.jpg")
 
 
 class IDReferenedObject(object):
@@ -26,7 +30,7 @@ class IDReferenedObject(object):
         
         Or None if none exists.
         """
-        return self._instances.get(id)
+        return cls._instances.get(id)
     
     @property
     def id(self):
@@ -44,10 +48,19 @@ class IDReferenedObject(object):
     
     def toJSON(self, *args):
         """Return a JSON representation."""
-        d = {"type": self.__class__.__name__, "id": self.id, "isScan": False, "isScannerHardware": False, "isScanner": False, "path": "/ref/" + self.id}
+        d = {"type": self.__class__.__name__, "id": self.id, "isScan": False, "isScannerHardware": False, "isScanner": False,
+            "path": self.path}
         for v in reversed(args):
             d.update(v)
         return d
+        
+    @property
+    def path(self):
+        """Return the path of the object where it can be found."""
+        return  "/ref/" + self.id
+
+get_by_id = IDReferenedObject.get_by_id
+
 
 class CombinedScanResult:
     """A result of a scan."""
@@ -65,21 +78,28 @@ class ScanResult(IDReferenedObject):
 
     def __init__(self, image):
         """Create a new scan result."""
+        self.image = image
     
     def toJSON(self, *args):
         """Return this object as JOSN represenation."""
-        return super().toJSON({"isScan": True}, *args)
+        return super().toJSON({"isScan": True, "image":self.path + "/image"}, *args)
+        
+    def GET_image(self):
+        """Return the image of the scan"""
+        return open(self.image, "rb")
 
+
+class ExampleScanResult(ScanResult):
+    """This is an example scan."""
+    
+    def __init__(self):
+        """Create an example scan image."""
+        super().__init__(EXAMPLE_IMAGE)
+        
 
 class NoScanResult(IDReferenedObject):
     """When no scan was attempted, yet."""
 
-    def __init__(self):
-        """Create a new scan result for no scan."""
-    
-    def toJSON(self):
-        """Return this object as JOSN represenation."""
-        return super().toJSON({})
 
 class FakeFixedImageScanner(IDReferenedObject):
     """This is not a real scanner.
@@ -90,7 +110,7 @@ class FakeFixedImageScanner(IDReferenedObject):
     def __init__(self, name):
         """Create a fixed image scanner."""
         self.name = name
-        self.scan_result = NoScanResult()
+        self.scan_result = ExampleScanResult()
     
     def toJSON(self):
         """Return the JSON representation of the scanner with more information."""
@@ -156,7 +176,6 @@ def update_local_scanners(threadpool=scanner_pool):
     return threadpool.submit(update)
 
 
-
 def get_scanners():
     """Get the available scanners.
     
@@ -166,7 +185,6 @@ def get_scanners():
         "TestScanner2": FakeFixedImageScanner2}
     scanners.update(scanimage_scanners)
     return scanners
-
 
 
 def scan_one_page(scanner1, scanner2):
