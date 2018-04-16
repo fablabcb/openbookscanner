@@ -91,5 +91,7 @@ def get_source():
 
 def main():
     """Run the openbookscanner server."""
-    run(host='localhost', port=8001, debug=True, reload=True)
+    run(host='0.0.0.0', port=8001, debug=True, reload=True)
 
+if __name__ == "__main__":
+    main()
