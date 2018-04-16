@@ -6,8 +6,16 @@ const SCANNER_2_SELECT_ID = "scanner-2";
 // display some more information about the scanner
 function updateScannerSelection(select) {
   var informationId = select.id + "-info";
-  var informaion = document.getElementById(informationId);
-  // todo: add pictures of scan and more about the device
+  var information = document.getElementById(informationId);
+  var selectedOption = select.options[select.selectedIndex];
+  if (selectedOption) {
+    var scanner = selectedOption.scanner;
+    if (scanner.isScannerHardware) {
+      information.innerText = scanner.hardware + " \"" + scanner.model + "\" (" + scanner.device + ")";
+    } else {
+      information.innerText = "Softwarescanner zum Testen";
+    }
+  }
 }
 
 // fill a select with scanner information
@@ -23,6 +31,7 @@ function fillWithScannerInformation(select, scanners) {
     select.appendChild(option);
   });
   updateScannerSelection(select);
+  select.onchange = function() {updateScannerSelection(select);};
 }
 
 // update all scanner entries with new information

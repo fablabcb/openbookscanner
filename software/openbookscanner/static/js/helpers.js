@@ -9,10 +9,13 @@ function removeAllChildren(element) {
 // iterate over all attributes
 function forAttr(obj, callback) {
   // from https://stackoverflow.com/a/16735184
+  var attributes = [];
   for (var property in obj) {
     if (obj.hasOwnProperty(property)) {
-        callback(property, obj[property]);
+        attributes.push(property);
     }
   }
+  attributes.sort();
+  attributes.forEach(function(property) {callback(property, obj[property]);});
 }
 

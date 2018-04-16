@@ -1,6 +1,8 @@
 from bottle import run, route, get, static_file, response, post
 import os
-from openbookscanner.scanner import get_scanners, scan_one_page
+from openbookscanner.scanner import (
+    get_scanners, scan_one_page, update_local_scanners
+)
 import json
 
 APPLICATION = 'OpenBookScanner'
@@ -91,6 +93,7 @@ def get_source():
 
 def main():
     """Run the openbookscanner server."""
+    update_local_scanners()
     run(host='0.0.0.0', port=8001, debug=True, reload=True)
 
 if __name__ == "__main__":
