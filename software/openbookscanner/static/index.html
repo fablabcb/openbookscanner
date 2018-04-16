@@ -9,27 +9,40 @@
     <link rel="stylesheet" type="text/css" href="css/grid.css">
     <link rel="stylesheet" type="text/css" href="css/fonts.css">
     <link rel="icon" type="image/svg+xml" href="img/logo-small.svg" />
+    <script type="text/javascript" src="js/settings.js"></script>
+    <script type="text/javascript" src="js/rest.js"></script>
+    <script type="text/javascript" src="js/helpers.js"></script>
   </head>
   <body>
     <header>
       <span class="title">OpenBookScanner</div>
     </header>
     <main>
-      <div class="bordered">
-        <form action="/scan" method="post">
-          <div class="s-grid-full m-grid-half l-grid-half">
+      <div class="grid-whole bordered equalize centered">
+        <div class="s-grid-full m-grid-half l-grid-half padded">
+          <div class="s-grid-full m-grid-full l-grid-half">
             Erste Seite von
-            <select name="scanner1">
+          </div>
+          <div class="s-grid-full m-grid-full l-grid-half">
+            <select id="scanner-1" name="scanner1">
               <!--<option value="audi">Audi</option>-->
             </select>
           </div>
-          <div>
+          <div id="scanner-2-info" class="scanner-info grid-whole">
+          </div>
+        </div>
+        <div class="s-grid-full m-grid-half l-grid-half padded">
+          <div class="s-grid-full m-grid-full l-grid-half">
             Zweite Seite von
-            <select name="scanner2">
+          </div>
+          <div class="s-grid-full m-grid-full l-grid-half">
+            <select id="scanner-2" name="scanner2">
               <!--<option value="audi">Audi</option>-->
             </select>
           </div>
-        </form>
+          <div id="scanner-2-info" class="scanner-info grid-whole">
+          </div>
+        </div>
       </div>
     </main>
     <footer>
