@@ -7,6 +7,9 @@ import subprocess
 from weakref import WeakValueDictionary
 from concurrent.futures import ThreadPoolExecutor
 import os
+import threading
+import tempfile
+
 
 HERE = os.path.dirname(__file__) or os.getcwd()
 EXAMPLE_IMAGE = os.path.join(HERE, "static", "img", "test.jpg")
@@ -88,6 +91,13 @@ class ScanResult(IDReferenedObject):
         """Return the image of the scan"""
         return open(self.image, "rb")
 
+class TemporaryScanResult(ScanResult):
+    """A ScanResult which is deleted when not used any more."""
+    
+    def __init__(self, filename, reference):
+        """Create a temporary scan result."""
+        super().__init__(self, filename)
+        self.reference = reference
 
 class ExampleScanResult(ScanResult):
     """This is an example scan."""
@@ -115,17 +125,10 @@ class FakeFixedImageScanner(IDReferenedObject):
     def toJSON(self):
         """Return the JSON representation of the scanner with more information."""
         return super().toJSON({"name": self.name, "lastScan": self.get_scan().toJSONRef(), "isScanner": True})
-    
-    def start_scan(self):
-        """Start scanning a document."""
-    
-    def wait_for_scan_to_end(self):
-        """Wait for the scan to end."""
-    
-    def get_scan(self):
-        """Return the scan result."""
-        return self.scan_result
 
+    def get_scan(self):
+        """Return the last scan of the scanner."""
+        return self.scan_result
 
 class LocalScanner(IDReferenedObject):
     """A Scanner which is connected to the computer."""
@@ -140,6 +143,8 @@ class LocalScanner(IDReferenedObject):
         self.id = self.device
         self.scan_result = NoScanResult()
         self.name = "Scanner " + number
+        self.pool = ThreadPoolExecutor(max_workers=1)
+        self.scan_future = None
     
     def toJSON(self):
         """Return the JSON representation of the scanner with more information."""
@@ -147,15 +152,27 @@ class LocalScanner(IDReferenedObject):
             "number": self.number, "device": self.device, "model": self.model, "producer": self.producer, 
             "isScannerHardware": True})
     
-    def start_scan(self):
-        """Start scanning a document."""
-    
-    def wait_for_scan_to_end(self):
-        """Wait for the scan to end."""
-    
     def get_scan(self):
         """Return the scan result."""
         return self.scan_result
+    
+    def POST_scan(self):
+        """Start a scan with this scanner."""
+        if self.scan_future is None or not self.scan_future.running():
+            self.scan_future = self.pool.submit(self._scan)
+        return self.GET_status()
+    
+    def GET_status(self):
+        """Return the status of the scanner."""
+        return {"scanning": bool(self.scan_future) and self.scan_future.running()}
+    
+    def _scan(self):
+        """Scan with the scanner."""
+        directory = tempfile.TemporaryDirectory()
+        scan_image = os.path.join(directory.name, "scan.jpg")
+        subprocess.run(["scanimage", "--format", "jpg", "--filename", scan_image], check=True)
+        self.scan_result = TemporaryScanResult(scan_image, directory)
+        
 
 FakeFixedImageScanner1 = FakeFixedImageScanner("Test-Scanner 1")
 FakeFixedImageScanner2 = FakeFixedImageScanner("Test-Scanner 2")

@@ -1,4 +1,4 @@
-from bottle import run, route, get, static_file, response, post
+from bottle import run, route, get, static_file, response, post, request
 import os
 from openbookscanner.scanner import (
     get_scanners, scan_one_page, update_local_scanners, get_by_id
@@ -83,7 +83,7 @@ def call_reference(id, name):
     """Call a reference function."""
     reference = get_by_id(id)
     assert reference is not None, "Reference \"{}\" could not be resolved.".format(id)
-    function_name = "GET_" + name
+    function_name = request.method + "_" + name
     function = getattr(reference, function_name)
     return function()
 

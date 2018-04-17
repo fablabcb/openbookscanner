@@ -5,4 +5,4 @@
 #    pip-compile --output-file requirements.txt requirements.txt
 #
 bottle==0.12.13
-jsonschema==2.6.0
+

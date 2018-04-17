@@ -19,3 +19,12 @@ function forAttr(obj, callback) {
   attributes.forEach(function(property) {callback(property, obj[property]);});
 }
 
+function deepEqual(x, y) {
+  // from https://stackoverflow.com/a/32922084
+  return (x && y && typeof x === 'object' && typeof y === 'object') ?
+    (Object.keys(x).length === Object.keys(y).length) &&
+      Object.keys(x).reduce(function(isEqual, key) {
+        return isEqual && deepEqual(x[key], y[key]);
+      }, true) : (x === y);
+}
+

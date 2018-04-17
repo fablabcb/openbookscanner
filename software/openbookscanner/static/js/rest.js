@@ -3,6 +3,7 @@
  *
  */
 
+const UPDATE_INTERVAL = 500;
 
 function requestJSON(method, path, request, onSuccess, onError) {
   // from https://stackoverflow.com/a/9713078
@@ -37,9 +38,24 @@ function getScanners(onSuccess, onError) {
   }, onError);
 }
 
-function resolveReference(id, onSuccess, onError) {
+function resolveReference(refOrId, onSuccess, onError) {
   // get the referenced object
+  var id = refOrId.id ? refOrId && refOrId.id : refOrId;
   requestJSON("GET", "/ref/" + id, {}, onSuccess, onError);
 }
 
+function waitForUpdate(ref, onUpdate, noUpdate) {
+  function update() {
+    resolveReference(ref, function(data) {
+      if (deepEqual(data, ref)) {
+        setTimeout(update, UPDATE_INTERVAL);
+      } else {
+        onUpdate(data);
+      }
+    }, noUpdate);
+  }
+}
 
+function scanWithScanner(scanner) {
+  requestJSON()
+}
