@@ -97,4 +97,4 @@ class ParseBroker:
         """Deliver a message to all brokers in the channel."""
         self.publisher.deliver_message(message)
     receive_message = deliver_message
-    
+

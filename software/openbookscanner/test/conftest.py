@@ -1,9 +1,14 @@
+import os
+os.environ["PARSE_API_ROOT"] = "http://localhost:1337/parse"
+
 from pytest import fixture
 from openbookscanner.states import State, FinalState, StateMachine, PollingState
 import time
 from openbookscanner.broker import LocalBroker, ParseBroker
 from unittest.mock import Mock
 
+from parse_rest.connection import register
+register("APPLICATION_ID", "pytest")
 
 class State1(State):
     
@@ -90,4 +95,4 @@ def mock():
 
 @fixture
 def parse_broker():
-    return ParseBroker()
+    return ParseBroker("pytest")
