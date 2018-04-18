@@ -92,7 +92,9 @@ class FinalState(State):
         return True
 
 class DoneRunning(State):
-    pass        
+    """This is the state the state machine goes to if parallel exeuction in a RunningState finishes
+    and no other transition is specified.
+    """        
 
 
 class RunningState(State):
@@ -100,9 +102,11 @@ class RunningState(State):
     next_state = _initial_next_state = DoneRunning()
     
     def has_transitioned(self):
+        """Return whether the state likes to transition."""
         return self.next_state != self._initial_next_state
 
     def enter(self, state_machine):
+        """Enter the state and start the parallel execution."""
         super().enter(state_machine)
         self.executor = ThreadPoolExecutor(max_workers=1)
         self.future = self.executor.submit(self.run)
@@ -115,22 +119,33 @@ class RunningState(State):
         """
         
     def is_running(self):
+        """Whether this state is currently running."""
         return not self.future.done()
         
     def wait(self, timeout=None):
+        """Wait for the parallel task to finish.
+        
+        timeout is given in seconds.
+        """
         self.future.exception(timeout)
 
     def transition_into(self, next_state):
+        """Transition into the next state but defer the transition until the parallel execution is finished.
+        
+        When the execution is finished, the next incoming message will start a transition.
+        The next state receives the message.
+        """
         self.next_state = next_state
     
     def receive_message(self, message):
+        """Receive a message and transition when the parallel execution is done."""
         if self.is_running():
             super().receive_message(message)
         else:
             if self.future.exception() is not None: # Errors should never pass silently.
                 raise self.future.exception()
-            self.state_machine.transition_into(self.next_state)
-            self.state_machine.receive_message(message)
+            super().transition_into(self.next_state)
+            self.next_state.receive_message(message)
 
 
 class PollingState(RunningState):
@@ -151,4 +166,29 @@ class PollingState(RunningState):
         When you use self.transition_into(new_state), this will not be called any more.
         """
 
-
+class TransitionOnReceivedMessage(State):
+    """This state waits for a message to be received and then transitions into the text state.
+    
+    
+    This can be used if you have several state machines which are interacting and you want to
+    postpone entering the states e.g. because they send messages on_enter.
+    """
+    
+    def __init__(self, next_state):
+        """Wait until a message arrives and transition."""
+        self.next_state = next_state
+    
+    def toJSON(self):
+        """Return the JSON of the state including the next state."""
+        d = super().toJSON()
+        d["next_state"] = self.next_state.toJSON()
+        return d
+    
+    def receive_unknown_message(self, message):
+        """If we receive an unknown message, we can transition into the next state.
+        
+        The next state receives the message.
+        """
+        self.transition_into(self.next_state)
+        self.next_state.receive_message(message)
+        

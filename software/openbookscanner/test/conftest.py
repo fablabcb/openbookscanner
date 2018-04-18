@@ -2,7 +2,7 @@ import os
 os.environ["PARSE_API_ROOT"] = "http://localhost:1337/parse"
 
 from pytest import fixture
-from openbookscanner.states import State, FinalState, StateMachine, PollingState
+from openbookscanner.states import State, FinalState, StateMachine, PollingState, TransitionOnReceivedMessage
 import time
 from openbookscanner.broker import LocalBroker, ParseBroker
 from unittest.mock import Mock
@@ -96,3 +96,29 @@ def mock():
 @fixture
 def parse_broker():
     return ParseBroker("pytest")
+
+
+#
+# Interacting state machines
+#
+
+
+class CountingState(State):
+
+    counter = 10
+
+    def on_enter(self):
+        self.deliver_message(message.count_down(stm=self.state_machine))
+    
+    def receive_count_down(self, message):
+        assert message["stm"] != self.stm
+        self.counter -= 1
+        if self.counter < 0:
+            self.transition_into(FinalState())
+
+@fixture
+def 
+
+
+
+
