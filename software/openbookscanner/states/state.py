@@ -27,7 +27,8 @@ class State:
     
     def toJSON(self):
         return {"type": self.__class__.__name__,
-                "is_final": self.is_final()
+                "is_final": self.is_final(),
+                "description": self.__class__.__doc__
                 }
     
     def is_final(self):

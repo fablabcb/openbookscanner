@@ -50,6 +50,7 @@ class Mounted(RunningState, USBStickState):
                 if path in line:
                     if not b"(rw" in line:
                         self.transition_into(MountedReadOnly())
+                        break
             time.sleep(0.1)
     
     def can_write(self):
