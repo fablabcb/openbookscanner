@@ -9,6 +9,5 @@ Further Reading
 - https://en.wikipedia.org/wiki/Strategy_pattern
 """
 
-from .message import message
 from .state import *
 

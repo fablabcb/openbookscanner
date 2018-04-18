@@ -1,6 +1,8 @@
 from pytest import fixture
 from openbookscanner.states import State, FinalState, StateMachine, PollingState
 import time
+from openbookscanner.broker import LocalBroker
+from unittest.mock import Mock
 
 
 class State1(State):
@@ -76,3 +78,11 @@ def epm():
     return StateMachineX(ErrorPollingStateX())
 
 
+@fixture
+def broker():
+    return LocalBroker()
+
+
+@fixture
+def mock():
+    return Mock()

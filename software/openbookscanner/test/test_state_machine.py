@@ -1,4 +1,4 @@
-from openbookscanner.states import message
+from openbookscanner.message import message
 import time
 from pytest import raises
 

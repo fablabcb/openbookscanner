@@ -4,7 +4,7 @@ This module contains the common states of all objects.
 """
 from concurrent.futures import ThreadPoolExecutor
 import sys
-from openbookscanner.states.message import message
+from openbookscanner.message import message
 import time
 
 class State:

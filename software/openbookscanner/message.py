@@ -5,7 +5,13 @@ This module contains a way to create new messages and document the accordingly.
 
 
 class MessageCreator:
-    """A simple way to create new massages."""
+    """A simple way to create new messages.
+    
+    Example:
+    
+        message = MessageCreator()
+        message.message_name(key="value")
+    """
 
     def __getattr__(self, name):
         def create_message(**kw):
