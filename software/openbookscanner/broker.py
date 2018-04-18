@@ -76,18 +76,25 @@ class ParsePublisher:
             subscriber.addToArray("messages", [message])
             subscriber.save()
 
+
 class ParseBroker:
+    """This is a parse broker which can send and receive on a channel."""
 
     def __init__(self, channel_name):
+        """Create a new ParseBroker for messages delivering and receiving on the channel."""
         self.publisher = ParsePublisher(channel_name)
         self.subscriber = ParseSubscriber(channel_name)
     
     def subscribe(self, subscriber):
+        """Subscribe to the brokers messages."""
         self.subscriber.subscribe(subscriber)
     
     def receive_messages(self):
+        """Receive all messages and forward them to the subscribers."""
         self.subscriber.receive_messages()
     
     def deliver_message(self, message):
+        """Deliver a message to all brokers in the channel."""
         self.publisher.deliver_message(message)
+    receive_message = deliver_message
     
