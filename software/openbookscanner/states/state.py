@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 import sys
 from openbookscanner.message import message
 import time
+from openbookscanner.broker import LocalBroker
 
 class State:
 
@@ -31,7 +32,8 @@ class State:
     def toJSON(self):
         return {"type": self.__class__.__name__,
                 "is_final": self.is_final(),
-                "description": self.__class__.__doc__
+                "description": self.__class__.__doc__,
+                "is_waiting_for_a_message_to_transition_to_the_next_state": self.is_waiting_for_a_message_to_transition_to_the_next_state()
                 }
     
     def is_final(self):
@@ -49,13 +51,32 @@ class State:
         return False
 
     def receive_message(self, message):
+        """Receive a message and handle it.
+        
+        The message has a "name" key.
+        If the state defines a method named "receive_" + the name, 
+        this method handles the message.
+        Otherwise, receive_unknown_message handles the message.
+        """
         message_name = message["name"]
         method_name = "receive_" + message_name
         method = getattr(self, method_name, self.receive_unknown_message)
         method(message)
 
     def receive_unknown_message(self, message):
-        pass
+        """The state reacts to all messages which are not explicitely handeled."""
+    
+    def is_waiting_for_a_message_to_transition_to_the_next_state(self):
+        """Return whether the transition to a next state is determined but deferred."""
+        return False
+    
+    def deliver_message(self, message):
+        """Deliver a message to the state machine which delivers it to the subscribers."""
+        self.state_machine.deliver_message(message)
+        
+    def __repr__(self):
+        """Return the string representation."""
+        return "<{}>".format(self.__class__.__name__)
     
 class FirstState(State):
     """This is the first state so one has a state to come from."""
@@ -65,25 +86,37 @@ class FirstState(State):
         raise ValueError("Please use transition_into to get away from this state for {}!".format(self.state_machine))
 
 
-class StateMachine:
+class StateMachine(LocalBroker):
     """This is the base class for all state machines."""
     
     state = FirstState()
 
     def transition_into(self, state):
+        """Transition into a new state."""
         self.state.leave(self)
         self.state = state
         self.state.enter(self)
 
     def receive_message(self, message):
+        """Receive a message and send it to the state."""
+        print(self, "received", message["name"])
         self.state.receive_message(message)
     
     def toJSON(self):
+        """Return the JSON representation of the object."""
         return {"type": self.__class__.__name__, "state": self.state.toJSON()}
     
     def update(self):
+        """Send an update message to the state machine.
+        
+        If the state machine is in a state which is 
+        is_waiting_for_a_message_to_transition_to_the_next_state,
+        this can trigger the transition.
+        """
         self.receive_message(message.update())
 
+    def __repr__(self):
+        return "<{} at state {}>".format(self.__class__.__name__, self.state)
 
 class FinalState(State):
     """This state can no be left."""
@@ -101,7 +134,7 @@ class RunningState(State):
 
     next_state = _initial_next_state = DoneRunning()
     
-    def has_transitioned(self):
+    def is_waiting_for_a_message_to_transition_to_the_next_state(self):
         """Return whether the state likes to transition."""
         return self.next_state != self._initial_next_state
 
@@ -155,9 +188,9 @@ class PollingState(RunningState):
 
     def run(self):
         """Call self.poll() on a regular basis, waiting self.timeout in between."""
-        while not self.has_transitioned():
+        while not self.is_waiting_for_a_message_to_transition_to_the_next_state():
             self.poll()
-            if not self.has_transitioned():
+            if not self.is_waiting_for_a_message_to_transition_to_the_next_state():
                 time.sleep(self.timeout)
     
     def poll(self):
@@ -172,6 +205,9 @@ class TransitionOnReceivedMessage(State):
     
     This can be used if you have several state machines which are interacting and you want to
     postpone entering the states e.g. because they send messages on_enter.
+
+    If you inherit from this state and you explicitely handle messages,
+    they do not trigger the transition.
     """
     
     def __init__(self, next_state):
@@ -191,4 +227,8 @@ class TransitionOnReceivedMessage(State):
         """
         self.transition_into(self.next_state)
         self.next_state.receive_message(message)
-        
+
+    def is_waiting_for_a_message_to_transition_to_the_next_state(self):
+        """This state always defers the transition until a message arrives."""
+        return True
+

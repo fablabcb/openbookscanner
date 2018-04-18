@@ -20,9 +20,33 @@ class LocalBroker:
     
     def deliver_message(self, message):
         """Send a message to all the subscribers."""
-        for subscriber in self.subscribers:
+        print("deliver_message", self, message, "to", self.subscribers)
+        for subscriber in list(self.subscribers):
             subscriber.receive_message(message)
-    receive_message = deliver_message
+    
+    def receive_message(self, message):
+        """When a broker receives a message, it delivers it."""
+        self.deliver_message(message)
+
+
+class DeferringBroker(LocalBroker):
+    """This is a local broker which sends delivers the messages later."""
+    
+    def __init__(self):
+        """Create a new broker which saves messages."""
+        super().__init__()
+        self.messages = []
+    
+    def deliver_message(self, message):
+        """Save the message for receiving later."""
+        self.messages.append(message)
+    
+    def receive_messages(self):
+        """Receive all saved messages."""
+        while self.messages:
+            message = self.messages.pop()
+            super().deliver_message(message)
+
 
 CHANNEL_CLASS_PREFIX = "Channel3"
 
