@@ -139,12 +139,16 @@ class PollingState(RunningState):
     timeout = 0.001
 
     def run(self):
-        if not self.has_transitioned():
-            self.poll()
+        """Call self.poll() on a regular basis, waiting self.timeout in between."""
         while not self.has_transitioned():
-            time.sleep(self.timeout)
             self.poll()
+            if not self.has_transitioned():
+                time.sleep(self.timeout)
     
     def poll(self):
-        pass
+        """This is called regularly.
+        
+        When you use self.transition_into(new_state), this will not be called any more.
+        """
+
 
