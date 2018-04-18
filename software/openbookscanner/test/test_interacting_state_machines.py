@@ -20,5 +20,4 @@ def test_update_triggers_the_collective_transition(two_linked_state_machines):
     assert m1_messages.receive_message.call_count == 10
     print("m2 messages:\n", m2_messages.receive_message.call_args_list)
     assert m2_messages.receive_message.call_count == 10
-    
 

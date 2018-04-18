@@ -99,7 +99,7 @@ class StateMachine(LocalBroker):
 
     def receive_message(self, message):
         """Receive a message and send it to the state."""
-        print(self, "received", message["name"])
+#        print(self, "received", message["name"])
         self.state.receive_message(message)
     
     def toJSON(self):

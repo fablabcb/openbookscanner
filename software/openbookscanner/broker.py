@@ -20,7 +20,7 @@ class LocalBroker:
     
     def deliver_message(self, message):
         """Send a message to all the subscribers."""
-        print("deliver_message", self, message, "to", self.subscribers)
+#        print("deliver_message", self, message, "to", self.subscribers)
         for subscriber in list(self.subscribers):
             subscriber.receive_message(message)
     
