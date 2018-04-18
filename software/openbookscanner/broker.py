@@ -20,7 +20,6 @@ class LocalBroker:
     
     def deliver_message(self, message):
         """Send a message to all the subscribers."""
-#        print("deliver_message", self, message, "to", self.subscribers)
         for subscriber in list(self.subscribers):
             subscriber.receive_message(message)
     
@@ -48,7 +47,7 @@ class DeferringBroker(LocalBroker):
             super().deliver_message(message)
 
 
-CHANNEL_CLASS_PREFIX = "Channel3"
+CHANNEL_CLASS_PREFIX = "Channel"
 
 def get_channel_class(channel_name):
     return Object.factory(CHANNEL_CLASS_PREFIX + channel_name)
@@ -64,7 +63,6 @@ class ParseSubscriber:
         message_holder = self.channel_class()
         message_holder.messages = []
         message_holder.save()
-        print(vars(message_holder))
         self.message_holder_id = message_holder.objectId
         self.subscribers = []
         
@@ -82,7 +80,6 @@ class ParseSubscriber:
             message = message_holder.messages[0]
             message_holder.removeFromArray("messages", [message])
             message_holder.save()
-            print("message", message)
             if message:
                 for subscriber in self.subscribers:
                     subscriber.receive_message(json.loads(message))
