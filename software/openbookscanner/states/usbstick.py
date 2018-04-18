@@ -33,31 +33,26 @@ class USBStickIsMounting(RunningState, USBStickState):
 class ErrorMounting(State, USBStickState):
     pass
 
-class Mounted(RunningState, USBStickState):
+class Mounted(PollingState, USBStickState):
+    
+    timeout = 0.1
     
     def __init__(self, path):
         self.path = path
-        self.space_is_left = True
     
-    def run(self):
-        while self.space_is_left:
-            p = subprocess.run(["mount"], stdout=subprocess.PIPE)
-            path = self.path.encode()
-            if path not in p.stdout:
-                self.transition_into(UnMounted())
-                break
-            for line in p.stdout.splitlines():
-                if path in line:
-                    if not b"(rw" in line:
-                        self.transition_into(MountedReadOnly())
-                        break
-            time.sleep(0.1)
+    def poll(self):
+        p = subprocess.run(["mount"], stdout=subprocess.PIPE)
+        path = self.path.encode()
+        if path not in p.stdout:
+            self.transition_into(UnMounted())
+        for line in p.stdout.splitlines():
+            if path in line and not b"(rw" in line:
+                self.transition_into(MountedReadOnly())
     
     def can_write(self):
         return True
     
     def no_space_left(self):
-        self.space_is_left = False
         self.transition_into(NoSpaceLeft())
         
 

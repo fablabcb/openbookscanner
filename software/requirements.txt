@@ -3,6 +3,7 @@
 # To update, run:
 #
 #    pip-compile --output-file requirements.txt requirements.txt
-#
-bottle==0.12.13
 
+six==1.11.0
+bottle==0.12.13
+git+https://github.com/milesrichardson/ParsePy.git@eae96c1

@@ -4,6 +4,8 @@ This module contains the common states of all objects.
 """
 from concurrent.futures import ThreadPoolExecutor
 import sys
+from openbookscanner.states.message import message
+import time
 
 class State:
 
@@ -33,8 +35,20 @@ class State:
     
     def is_final(self):
         return False
+        
+    def is_running(self):
+        """Whether this state has some activity running in parallel."""
+        return False
 
+    def receive_message(self, message):
+        message_name = message["name"]
+        method_name = "receive_" + message_name
+        method = getattr(self, method_name, self.receive_unknown_message)
+        method(message)
 
+    def receive_unknown_message(self, message):
+        pass
+    
 class FirstState(State):
     """This is the first state so one has a state to come from."""
 
@@ -44,10 +58,9 @@ class FirstState(State):
 
 
 class StateMachine:
-    """This is the base class for all states."""
+    """This is the base class for all state machines."""
     
     state = FirstState()
-
 
     def transition_into(self, state):
         self.state.leave(self)
@@ -55,17 +68,13 @@ class StateMachine:
         self.state.enter(self)
 
     def receive_message(self, message):
-        assert message.get("type") == "message"
-        message_name = message["name"]
-        method_name = "receive_" + message_name
-        method = getattr(self, method_name, self.receive_unknown_message)
-        method(message)
-    
-    def receive_unknown_message(self, message):
-        pass
+        self.state.receive_message(message)
     
     def toJSON(self):
         return {"type": self.__class__.__name__, "state": self.state.toJSON()}
+    
+    def update(self):
+        self.receive_message(message.update())
 
 
 class FinalState(State):
@@ -80,10 +89,13 @@ class DoneRunning(State):
 
 class RunningState(State):
 
-    next_state = DoneRunning()
+    next_state = _initial_next_state = DoneRunning()
+    
+    def has_transitioned(self):
+        return self.next_state != self._initial_next_state
 
     def enter(self, state_machine):
-        super().enter(self, state_machine)
+        super().enter(state_machine)
         self.executor = ThreadPoolExecutor(max_workers=1)
         self.future = self.executor.submit(self.run)
     
@@ -95,18 +107,35 @@ class RunningState(State):
         """
         
     def is_running(self):
-        return self.future.running()
+        return not self.future.done()
+        
+    def wait(self, timeout=None):
+        self.future.exception(timeout)
 
     def transition_into(self, next_state):
         self.next_state = next_state
     
     def receive_message(self, message):
         if self.is_running():
-            super().receive_message(self, message)
+            super().receive_message(message)
         else:
             if self.future.exception() is not None: # Errors should never pass silently.
                 raise self.future.exception()
             self.state_machine.transition_into(self.next_state)
             self.state_machine.receive_message(message)
 
+
+class PollingState(RunningState):
+    """This state runs the poll function all "timeout" seconds and stops on transition."""
     
+    timeout = 0.001
+
+    def run(self):
+        if not self.has_transitioned():
+            self.poll()
+        while not self.has_transitioned():
+            time.sleep(self.timeout)
+            self.poll()
+    
+    def poll(self):
+        pass
