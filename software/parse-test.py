@@ -16,5 +16,33 @@ try:
 except Exception as e:
     pprint(vars(e))
 
+gameScore.addToArray("key", ["object1", "object2"])
+gameScore.save()
+gameScore.removeFromArray("key", ["object2"])
+gameScore.save()
+
 pprint(vars(gameScore))
+pprint(gameScore.objectId)
+
+
+print(Object.factory("Channel_") is Object.factory("Channel_"))
+
+if 1:
+
+    from openbookscanner.broker import ParseBroker
+    from openbookscanner.message import message
+
+    class MessageReceiver:
+
+        def receive_message(self, message):
+            pprint(message)
+
+    broker = ParseBroker("test")
+    broker.subscribe(MessageReceiver())
+
+    while True:
+        text = input()
+        broker.deliver_message(message.test(text=text))
+        broker.receive_messages()
+        
 

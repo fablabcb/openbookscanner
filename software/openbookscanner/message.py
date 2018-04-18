@@ -32,4 +32,5 @@ message.update.describe_as("""This message is used to update the states of state
 If states are running they can not update the state machine.
 In this case, this message allows the state to transition.
 """)
+message.test.describe_as("""This is a test message not used in production code.""")
 

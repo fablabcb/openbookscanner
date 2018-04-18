@@ -1,7 +1,7 @@
 from pytest import fixture
 from openbookscanner.states import State, FinalState, StateMachine, PollingState
 import time
-from openbookscanner.broker import LocalBroker
+from openbookscanner.broker import LocalBroker, ParseBroker
 from unittest.mock import Mock
 
 
@@ -86,3 +86,8 @@ def broker():
 @fixture
 def mock():
     return Mock()
+
+
+@fixture
+def parse_broker():
+    return ParseBroker()
