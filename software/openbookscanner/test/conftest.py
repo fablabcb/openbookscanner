@@ -37,6 +37,11 @@ class PollingStateX(PollingState):
     def is_done_polling(self):
         return False
 
+class ErrorPollingStateX(PollingState):
+    
+    def poll(self):
+        raise RuntimeError("Polling broken")
+
 
 class PollingDone(State):
 
@@ -65,5 +70,9 @@ def s2():
 @fixture
 def mp():
     return StateMachineX(PollingStateX())
+
+@fixture
+def epm():
+    return StateMachineX(ErrorPollingStateX())
 
 

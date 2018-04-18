@@ -22,9 +22,10 @@ class State:
         self.on_leave()
     
     def on_leave(self):
-        """"""
+        """Calles when the state is left."""
     
     def transition_into(self, new_state):
+        """Use this to transition into another state."""
         self.state_machine.transition_into(new_state)
     
     def toJSON(self):
@@ -34,10 +35,17 @@ class State:
                 }
     
     def is_final(self):
+        """This is a marker for the state being final."""
         return False
         
     def is_running(self):
-        """Whether this state has some activity running in parallel."""
+        """Whether this state has some activity running in parallel.
+        
+        You can use this in connection with wait() if you like to know when it finishes.
+        
+            if state.is_running():
+                state.wait()
+        """
         return False
 
     def receive_message(self, message):
@@ -139,3 +147,4 @@ class PollingState(RunningState):
     
     def poll(self):
         pass
+

@@ -1,5 +1,6 @@
 from openbookscanner.states import message
 import time
+from pytest import raises
 
 
 def test_state1(s1):
@@ -52,3 +53,9 @@ def test_can_exit_polling_state(mp):
     assert mp.state.is_done_polling()
     
 
+def test_transition_into_error_state(epm):
+    epm.state.wait()
+    with raises(RuntimeError):
+        epm.update()
+    with raises(RuntimeError):
+        epm.update()
