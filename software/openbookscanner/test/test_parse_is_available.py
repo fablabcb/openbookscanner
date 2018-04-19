@@ -1,7 +1,7 @@
 import os
 
 def test_parse_environment_variable_is_set():
-    assert "PARSE_API_ROOT" in os.environ, """The environment variable PARSE_API_ROOT must be set.
+    message = """The environment variable PARSE_API_ROOT must be set.
     
     When you start the Parse Server, you get the URL of the parse server.
     
@@ -13,3 +13,5 @@ def test_parse_environment_variable_is_set():
     
     Then, you can start pytest.
     """
+    print(message)
+    assert "PARSE_API_ROOT" in os.environ, message
