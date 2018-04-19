@@ -29,7 +29,8 @@ class TestSavingObject:
     
     @mark.parametrize("name,value,exists", [
         ("type", data["type"], True),
-        ("description", data["description"], True)
+        ("description", data["description"], True),
+        ("state", {}, False),
     ])
     def test_attributes_of_object(self, pu, name, value, exists):
         if exists:
