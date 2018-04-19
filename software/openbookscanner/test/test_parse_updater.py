@@ -35,7 +35,7 @@ class TestSavingObject:
     def test_attributes_of_object(self, pu, name, value, exists):
         if exists:
             assert (getattr(pu.parse_object, name) == value)
-        assert pu.parse_object.has_type == exists
+        assert getattr(pu.parse_object, "has_" + name) == exists
         assert (name in pu.parse_object.attributes) == exists
         
     def test_json_is_included(self, pu):
