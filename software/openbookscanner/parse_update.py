@@ -87,9 +87,10 @@ class ParseUpdater:
             has_value = False
         obj[attr] = value
         obj["has_" + attr] = has_value
-        obj.setdefault("attibutes", [])
-        obj["attributes"].append(attr)
-        return has_attr
+        obj.setdefault("attributes", [])
+        if has_value:
+            obj["attributes"].append(attr)
+        return has_value
 
     def set_attributes(self, data):
         """Set the attributes of the parse object from a json dict."""

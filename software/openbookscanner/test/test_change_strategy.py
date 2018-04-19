@@ -72,4 +72,3 @@ class TestBatchStrategy:
         s.batch()
         batcher.batch.assert_not_called()
 
-
