@@ -9,6 +9,7 @@ import time
 from openbookscanner.broker import LocalBroker
 
 class State:
+    """This is the base state for all the states of state machines."""
 
     def enter(self, state_machine):
         """The state machine enters this state."""
@@ -87,19 +88,43 @@ class FirstState(State):
 
 
 class StateMachine(LocalBroker):
-    """This is the base class for all state machines."""
+    """This is the base class for all state machines.
     
-    state = FirstState()
+    A state machine "stm" implements these patterns:
+    
+    - a publisher
+      stm.subscribe(subscriber) adds a subscriber to publish to
+      stm.deliver_message(message) delivers the message to all subscribers
+    - a subscriber
+      stm.receive_message(message) sends the message to the state which then can transition
+    - an observable
+      state_machine.observe_state(observer) adds a new observer which is notified on state changes
+      observer.state_changed(stm) notifies the observers about the state change
+    """
+    
+    def __init__(self):
+        """Create a new state machine."""
+        super().__init__()
+        self.state = FirstState()
+        self.state_observers = []
+    
+    def observe_state(self, observer):
+        """The observer observes the state of the state machine."""
+        self.state_observers.append(observer)
+    
+    def state_changed(self):
+        for observer in list(self.state_observers):
+            observer.state_changed(self)
 
     def transition_into(self, state):
         """Transition into a new state."""
         self.state.leave(self)
         self.state = state
         self.state.enter(self)
+        self.state_changed()
 
     def receive_message(self, message):
         """Receive a message and send it to the state."""
-#        print(self, "received", message["name"])
         self.state.receive_message(message)
     
     def toJSON(self):

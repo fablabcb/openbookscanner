@@ -66,7 +66,7 @@ class ParseSubscriber:
         self.message_holder_id = message_holder.objectId
         self.subscribers = []
         
-    def get_message_holder(self):
+    def _get_message_holder(self):
         return self.channel_class.Query.get(objectId=self.message_holder_id)
 
     def subscribe(self, subscriber):
@@ -75,7 +75,7 @@ class ParseSubscriber:
 
     def receive_messages(self):
         """Receive the messages."""
-        message_holder = self.get_message_holder()
+        message_holder = self._get_message_holder()
         while message_holder.messages:
             message = message_holder.messages[0]
             message_holder.removeFromArray("messages", [message])
@@ -86,12 +86,14 @@ class ParseSubscriber:
 
 
 class ParsePublisher:
-    """This class publishes messages no a specific channel."""
+    """This class publishes messages on a specific channel."""
 
     def __init__(self, channel_name):
+        """Create a new publisher and publish messages on a channel."""
         self.message_holder_class = Object.factory(CHANNEL_CLASS_PREFIX + channel_name)
     
     def deliver_message(self, message):
+        """Deliver a message to all Subscribers on a channel."""
         message = json.dumps(message)
         for subscriber in self.message_holder_class.Query.all():
             subscriber.addToArray("messages", [message])
