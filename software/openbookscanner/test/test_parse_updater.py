@@ -6,7 +6,7 @@ import json
 
 class TestSavingObject:
 
-    data = {"type": "MockX", "description": "test description", "value": 1}
+    data = {"type": "TestSavingObjectMockX", "description": "test description", "valueasdasdsada": 1}
 
     @fixture
     def obj(self):
@@ -28,7 +28,7 @@ class TestSavingObject:
         ss.save.assert_called_once_with(pu.parse_object)
     
     @mark.parametrize("name,value,exists", [
-        ("type", "MockX", True),
+        ("type", data["type"], True),
         ("description", data["description"], True)
     ])
     def test_attributes_of_object(self, pu, name, value, exists):
@@ -40,11 +40,14 @@ class TestSavingObject:
     def test_json_is_included(self, pu):
         data = json.loads(pu.parse_object.json)
         assert data == self.data
+    
+    def test_valueasdasdsada_is_not_an_attribute(self, pu):
+        assert "valueasdasdsada" not in pu.parse_object.attributes
 
 
 class TestSavingToParse:
 
-    data = {"type": "MockX", "description": "test description", "value": 1}
+    data = {"type": "TestSavingToParseMockX", "description": "test description", "value": 1}
 
     @fixture
     def obj(self):
