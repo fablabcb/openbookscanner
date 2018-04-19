@@ -1,12 +1,11 @@
-import os
-os.environ["PARSE_API_ROOT"] = "http://localhost:1337/parse"
-
 from pytest import fixture
+import pytest
 from openbookscanner.states import State, FinalState, StateMachine, PollingState, TransitionOnReceivedMessage
 import time
 from openbookscanner.broker import LocalBroker, ParseBroker, DeferringBroker
 from unittest.mock import Mock
 from openbookscanner.message import message
+import os
 
 from parse_rest.connection import register
 register("APPLICATION_ID", "pytest")
@@ -103,7 +102,7 @@ def mock():
 
 
 @fixture
-def parse_broker():
+def parse_broker(parse_required):
     return ParseBroker("pytest")
 
 
@@ -148,6 +147,16 @@ def two_linked_state_machines():
     print("m1.subscribers", m1.subscribers)
     return m1, m2, m1_messages, m2_messages
 
+
+#
+# Parse
+#
+
+
+@fixture
+def parse_required():
+    if "PARSE_API_ROOT" not in os.environ:
+       pytest.skip()
 
 
 

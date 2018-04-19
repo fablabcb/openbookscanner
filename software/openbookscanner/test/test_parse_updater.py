@@ -57,7 +57,7 @@ class TestSavingToParse:
         obj.toJSON.return_value = self.data
         return obj
     
-    def test_save_to_parse_server(self, obj):
+    def test_save_to_parse_server(self, obj, parse_required):
         pu = ParseUpdater(obj)
         assert pu.type == self.data["type"]
         
