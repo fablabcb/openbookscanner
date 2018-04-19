@@ -15,3 +15,4 @@ def test_parse_environment_variable_is_set():
     """
     print(message)
     assert "PARSE_API_ROOT" in os.environ, message
+
