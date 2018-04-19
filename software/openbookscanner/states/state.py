@@ -102,10 +102,12 @@ class StateMachine(LocalBroker):
       observer.state_changed(stm) notifies the observers about the state change
     """
     
+    first_state = FirstState
+    
     def __init__(self):
         """Create a new state machine."""
         super().__init__()
-        self.state = FirstState()
+        self.state = self.first_state()
         self.state_observers = []
     
     def observe_state(self, observer):

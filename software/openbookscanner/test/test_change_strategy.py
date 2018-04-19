@@ -1,4 +1,4 @@
-from openbookscanner.parse_update import OnChangeStrategy, BatchStrategy
+from openbookscanner.update_strategy import OnChangeStrategy, BatchStrategy
 from unittest.mock import Mock
 from pytest import fixture
 

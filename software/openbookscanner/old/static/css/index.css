@@ -1,0 +1,36 @@
+
+header {
+  margin-bottom: 0.3em;
+}
+
+header .title {
+  font-size: 2em;
+}
+
+.bordered {
+  border-style: solid;
+  border-width: 1px;
+  border-color: #888888;
+  border-radius: 0.3em;
+  padding: 1em;
+  margin: 1em;
+}
+
+.centered {
+  text-align: center;
+}
+
+footer {
+  color: #888888;
+}
+
+footer a {
+  color: #888888;
+}
+
+.scanner-info img {
+  max-width: 100%;
+  max-height: 10em;
+  display: inline-block;
+}
+

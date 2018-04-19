@@ -5,7 +5,7 @@ https://en.wikipedia.org/wiki/Message_broker
 """
 from parse_rest.datatypes import Object
 import json
-
+from .update_strategy import OnChangeStrategy
 
 class LocalBroker:
     """This is a local broker which just forwards the messages."""
@@ -57,7 +57,7 @@ class ParseSubscriber:
     """A ParseBroker subscribes to all messages sent under ist name."""
 
 
-    def __init__(self, channel_name):
+    def __init__(self, channel_name, update_strategy=OnChangeStrategy()):
         """Create a parse message subscriber which is subscribed to all messages of a channel."""
         self.channel_class = get_channel_class(channel_name)
         message_holder = self.channel_class()
@@ -65,6 +65,7 @@ class ParseSubscriber:
         message_holder.save()
         self.message_holder_id = message_holder.objectId
         self.subscribers = []
+        self.update_strategy = update_strategy
         
     def _get_message_holder(self):
         return self.channel_class.Query.get(objectId=self.message_holder_id)
@@ -79,7 +80,7 @@ class ParseSubscriber:
         while message_holder.messages:
             message = message_holder.messages[0]
             message_holder.removeFromArray("messages", [message])
-            message_holder.save()
+            self.update_strategy.save(message_holder)
             if message:
                 for subscriber in self.subscribers:
                     subscriber.receive_message(json.loads(message))
@@ -88,25 +89,26 @@ class ParseSubscriber:
 class ParsePublisher:
     """This class publishes messages on a specific channel."""
 
-    def __init__(self, channel_name):
+    def __init__(self, channel_name, update_strategy=OnChangeStrategy()):
         """Create a new publisher and publish messages on a channel."""
         self.message_holder_class = Object.factory(CHANNEL_CLASS_PREFIX + channel_name)
+        self.update_strategy = update_strategy
     
     def deliver_message(self, message):
         """Deliver a message to all Subscribers on a channel."""
         message = json.dumps(message)
         for subscriber in self.message_holder_class.Query.all():
             subscriber.addToArray("messages", [message])
-            subscriber.save()
+            self.update_strategy.save(subscriber)
 
 
 class ParseBroker:
     """This is a parse broker which can send and receive on a channel."""
 
-    def __init__(self, channel_name):
+    def __init__(self, channel_name, update_strategy=OnChangeStrategy()):
         """Create a new ParseBroker for messages delivering and receiving on the channel."""
-        self.publisher = ParsePublisher(channel_name)
-        self.subscriber = ParseSubscriber(channel_name)
+        self.publisher = ParsePublisher(channel_name, update_strategy)
+        self.subscriber = ParseSubscriber(channel_name, update_strategy)
     
     def subscribe(self, subscriber):
         """Subscribe to the brokers messages."""
@@ -120,4 +122,14 @@ class ParseBroker:
         """Deliver a message to all brokers in the channel."""
         self.publisher.deliver_message(message)
     receive_message = deliver_message
+
+
+class MessagePrintingSubscriber:
+    """When the this object receives a message, it prints it.
+    
+    This can be useful to debug activity of a subscriber."""
+
+    def receive_message(self, message):
+        """Print a message."""
+        pprint(message)
 

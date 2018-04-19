@@ -5,7 +5,7 @@ Run the module with
 
 """
 
-from openbookscanner.app import main
+from openbookscanner.main import main
 
 main()
 
