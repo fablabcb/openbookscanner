@@ -63,9 +63,7 @@ class TestPollingState:
             epm.update()
 
 class TestStateMachineObserver:
-    """The state machine implements an observer pattern.
-    
-    This observer should be able to """
+    """The state machine implements an observer pattern."""
     
     def test_no_state_change_on_update(self, m, mock):
         m.observe_state(mock)

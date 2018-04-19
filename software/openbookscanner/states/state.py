@@ -129,7 +129,8 @@ class StateMachine(LocalBroker):
     
     def toJSON(self):
         """Return the JSON representation of the object."""
-        return {"type": self.__class__.__name__, "state": self.state.toJSON()}
+        return {"type": self.__class__.__name__, "state": self.state.toJSON(), 
+                "description": self.__class__.__doc__}
     
     def update(self):
         """Send an update message to the state machine.
