@@ -2,7 +2,7 @@ from pytest import fixture
 import pytest
 from openbookscanner.states import State, FinalState, StateMachine, PollingState, TransitionOnReceivedMessage
 import time
-from openbookscanner.broker import LocalBroker, ParseBroker, DeferringBroker
+from openbookscanner.broker import LocalBroker, ParseBroker, BufferingBroker
 from unittest.mock import Mock
 from openbookscanner.message import message
 import os
@@ -107,8 +107,8 @@ def parse_broker(parse_required):
 
 
 @fixture
-def deferring_broker():
-    return DeferringBroker()
+def buffering_broker():
+    return BufferingBroker()
 
 #
 # Interacting state machines

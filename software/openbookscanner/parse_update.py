@@ -10,7 +10,7 @@ from .update_strategy import OnChangeStrategy
 
 
 class ParseUpdater:
-    """Update the online state of an object."""
+    """Update the parsePlatform state of an object."""
     
     def __init__(self, obj, batch_strategy=OnChangeStrategy()):
         """Update the JSON representation of an object.

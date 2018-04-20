@@ -26,6 +26,10 @@ class MessageCreator:
         setattr(self, name, create_message)
         return create_message
 
+    def __call__(self, name, data):
+        """Create a message with a specific name."""
+        return getattr(self, name)(**data)
+
 message = MessageCreator()
 message.update.describe_as("""This message is used to update the states of state machines.
 
@@ -33,4 +37,5 @@ If states are running they can not update the state machine.
 In this case, this message allows the state to transition.
 """)
 message.test.describe_as("""This is a test message not used in production code.""")
+message.state_changed.describe_as("""When a state machine changes a state, this message is sent.""")
 

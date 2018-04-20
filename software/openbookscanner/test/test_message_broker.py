@@ -12,11 +12,11 @@ def test_subscribers_receive_messages(broker, mock):
     mock.receive_message.assert_called_once_with(m)
 
 
-def test_defer_messages(deferring_broker, mock):
-    deferring_broker.subscribe(mock)
+def test_defer_messages(buffering_broker, mock):
+    buffering_broker.subscribe(mock)
     m = message.test()
-    deferring_broker.deliver_message(m)
+    buffering_broker.deliver_message(m)
     mock.receive_message.assert_not_called()
-    deferring_broker.receive_messages()
+    buffering_broker.flush()
     mock.receive_message.assert_called_once_with(m)
     

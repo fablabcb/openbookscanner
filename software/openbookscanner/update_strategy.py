@@ -19,6 +19,8 @@ class OnChangeStrategy:
 
 class BatchStrategy:
     """Store objects which want to be saved and save them later.
+    
+    https://github.com/milesrichardson/ParsePy#batch-operations
     """
     
     def __init__(self):

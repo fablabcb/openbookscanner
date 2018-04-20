@@ -2,10 +2,16 @@
 This module contains the message broker which distributes messages.
 
 https://en.wikipedia.org/wiki/Message_broker
+
+A broker has two responsibilities, as publisher and as subscriber
+
+
 """
 from parse_rest.datatypes import Object
 import json
 from .update_strategy import OnChangeStrategy
+from pprint import pprint
+
 
 class LocalBroker:
     """This is a local broker which just forwards the messages."""
@@ -28,7 +34,7 @@ class LocalBroker:
         self.deliver_message(message)
 
 
-class DeferringBroker(LocalBroker):
+class BufferingBroker(LocalBroker):
     """This is a local broker which sends delivers the messages later."""
     
     def __init__(self):
@@ -40,7 +46,7 @@ class DeferringBroker(LocalBroker):
         """Save the message for receiving later."""
         self.messages.append(message)
     
-    def receive_messages(self):
+    def flush(self):
         """Receive all saved messages."""
         while self.messages:
             message = self.messages.pop()
@@ -59,6 +65,7 @@ class ParseSubscriber:
 
     def __init__(self, channel_name, update_strategy=OnChangeStrategy()):
         """Create a parse message subscriber which is subscribed to all messages of a channel."""
+        self.channel_name = channel_name
         self.channel_class = get_channel_class(channel_name)
         message_holder = self.channel_class()
         message_holder.messages = []
@@ -66,6 +73,11 @@ class ParseSubscriber:
         self.message_holder_id = message_holder.objectId
         self.subscribers = []
         self.update_strategy = update_strategy
+        
+    @property
+    def channel(self):
+        """The name of the channel we listen to."""
+        return self.channel_name
         
     def _get_message_holder(self):
         return self.channel_class.Query.get(objectId=self.message_holder_id)
@@ -84,6 +96,12 @@ class ParseSubscriber:
             if message:
                 for subscriber in self.subscribers:
                     subscriber.receive_message(json.loads(message))
+                    
+    flush = receive_messages # TODO: refactor name
+
+    def delete(self):
+        """Delete the own objects on the parse server."""
+        self.update_strategy.delete(self._get_message_holder())
 
 
 class ParsePublisher:
@@ -100,6 +118,10 @@ class ParsePublisher:
         for subscriber in self.message_holder_class.Query.all():
             subscriber.addToArray("messages", [message])
             self.update_strategy.save(subscriber)
+    
+    def receive_message(self, message):
+        """When a publisher receives the message, it delivers it."""
+        self.deliver_message(message)
 
 
 class ParseBroker:
@@ -122,14 +144,24 @@ class ParseBroker:
         """Deliver a message to all brokers in the channel."""
         self.publisher.deliver_message(message)
     receive_message = deliver_message
+    
+    def delete(self):
+        """Delete the own objects on the parse server."""
+        self.subscriber.delete()
+
 
 
 class MessagePrintingSubscriber:
     """When the this object receives a message, it prints it.
     
     This can be useful to debug activity of a subscriber."""
+    
+    def __init__(self, *args):
+        """All arguments are passed to print."""
+        self.args = args
 
     def receive_message(self, message):
         """Print a message."""
+        print(*args, end=" ")
         pprint(message)
 

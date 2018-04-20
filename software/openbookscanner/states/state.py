@@ -107,8 +107,9 @@ class StateMachine(LocalBroker):
     def __init__(self):
         """Create a new state machine."""
         super().__init__()
-        self.state = self.first_state()
         self.state_observers = []
+        self.state = FirstState()
+        self.transition_into(self.first_state())
     
     def observe_state(self, observer):
         """The observer observes the state of the state machine."""
@@ -259,4 +260,16 @@ class TransitionOnReceivedMessage(State):
     def is_waiting_for_a_message_to_transition_to_the_next_state(self):
         """This state always defers the transition until a message arrives."""
         return True
+
+
+class StateChangeToMessageReceiveAdapter:
+    """If the state changes, this adapter sends a change message."""
+    
+    def __init__(self, publisher):
+        """Create a new adapter wich sends messages to the publisher."""
+        self.publisher = publisher
+    
+    def state_changed(self, state_machine):
+        """When the state changes, a message is sent to the publisher."""
+        self.publisher.receive_message(message.state_changed(state_machine=state_machine.toJSON()))
 
