@@ -162,6 +162,6 @@ class MessagePrintingSubscriber:
 
     def receive_message(self, message):
         """Print a message."""
-        print(*args, end=" ")
+        print(*self.args, end=" ")
         pprint(message)
 

@@ -4,6 +4,8 @@ from .update_strategy import BatchStrategy
 from .states.status import StatusStateMachine
 from .states.state import StateChangeToMessageReceiveAdapter
 
+import time
+
 
 class OpenBookScanner:
     """This is the main class working on the scanner."""
@@ -37,6 +39,7 @@ class OpenBookScanner:
          """Run the update in a loop."""
          while 1:
              self.update()
+             time.sleep(0.5)
     
     def update(self):
         """Update the book scanner, send and receive messages."""
