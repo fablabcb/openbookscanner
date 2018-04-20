@@ -8,7 +8,7 @@ from openbookscanner.message import message
 import os
 
 from parse_rest.connection import register
-register("APPLICATION_ID", "pytest")
+register("OpenBookScanner", "pytest")
 
 class State1(State):
     

@@ -11,6 +11,9 @@ from .message import message
 import click
 from .update_strategy import BatchStrategy
 
+APPLICATION_ID = "OpenBookScanner"
+
+
 @click.group()
 def cli():
     """OpenBookScanner
@@ -25,7 +28,7 @@ def cli():
                 help="Print the messages of the message broker.")
 def run(print_messages):
     """Run the book scanner."""
-    register("APPLICATION_ID", "OpenBookScanner")
+    register(APPLICATION_ID, "OpenBookScanner")
     openbookscanner = OpenBookScanner()
     if print_messages:
         openbookscanner.print_messages()
@@ -41,7 +44,7 @@ def receive(channel):
     "OpenBookScanner" is the channel for the book scanner messages. This is the default one.
     "OpenBookScannerStateChanges" is the channel for state changes.
     """
-    register("APPLICATION_ID", "MessageListener")
+    register(APPLICATION_ID, "MessageListener")
     channels = channel or [OpenBookScanner.public_channel_name]
     click.echo("Listening to channel"+ ("s" if len(channels) > 1 else "") + " \"" + ", ".join(channels) + "\".")
     update = BatchStrategy()
@@ -67,7 +70,7 @@ def send(channel):
     "OpenBookScanner" is the channel for the book scanner messages. This is the default one.
     "OpenBookScannerStateChanges" is the channel for state changes.
     """
-    register("APPLICATION_ID", "MessageSender")
+    register(APPLICATION_ID, "MessageSender")
     channels = channel or [OpenBookScanner.public_channel_name]
     click.echo("Writing to channel"+ ("s" if len(channels) > 1 else "") + " \"" + ", ".join(channels) + "\".")
     update = BatchStrategy()
@@ -94,6 +97,7 @@ def send(channel):
             print("Sending message ...", end="", flush=True)
             for publisher in publishers:
                 publisher.deliver_message(m)
+            print("batch")
             update.batch()
             print(" done.")
 

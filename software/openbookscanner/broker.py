@@ -89,13 +89,12 @@ class ParseSubscriber:
     def receive_messages(self):
         """Receive the messages."""
         message_holder = self._get_message_holder()
-        while message_holder.messages:
-            message = message_holder.messages[0]
-            message_holder.removeFromArray("messages", [message])
-            self.update_strategy.save(message_holder)
-            if message:
-                for subscriber in self.subscribers:
-                    subscriber.receive_message(json.loads(message))
+        messages = list(message_holder.messages)
+        message_holder.removeFromArray("messages", messages)
+        for message in messages:
+            for subscriber in self.subscribers:
+                subscriber.receive_message(json.loads(message))
+        
                     
     flush = receive_messages # TODO: refactor name
 
@@ -117,7 +116,7 @@ class ParsePublisher:
         message = json.dumps(message)
         for subscriber in self.message_holder_class.Query.all():
             subscriber.addToArray("messages", [message])
-            self.update_strategy.save(subscriber)
+#            self.update_strategy.save(subscriber)
     
     def receive_message(self, message):
         """When a publisher receives the message, it delivers it."""

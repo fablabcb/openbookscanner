@@ -43,8 +43,8 @@ class OpenBookScanner:
     
     def update(self):
         """Update the book scanner, send and receive messages."""
-        self.outgoing_messages.flush()
         self.incoming_messages.flush()
+        self.outgoing_messages.flush()
         self.update_strategy.batch()
         
     def print_messages(self):
