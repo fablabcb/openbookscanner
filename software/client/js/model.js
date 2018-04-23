@@ -4,23 +4,24 @@ const PUBLIC_MODEL_CLASS_NAME = "OpenBookScanner";
 
 var model;
 
-
+// This is the model class for the whole open book scanner
 function Model() {
     this.outgoingMessages = new ParseSubscriber("OpenBookScannerOutgoing");
     this.outgoingMessages.subscribe(new ConsoleMessageLoggingSubscriber("OpenBookScannerOutgoing"));
     this.modelClass = Parse.Object.extend(PUBLIC_MODEL_CLASS_NAME);
-    this.relations = ["status"];
+    this.relations = relationsToStateMachines;
     this.createdRelationObjectIdsToStates = {};
     this.retrieveModel();
 }
 
+// private: this is called once to retrieve the model
 Model.prototype.retrieveModel = function() {
     var me = this;
     var query = new Parse.Query(this.modelClass);
     // Retrieve the most recent ones
     query.descending("createdAt");
     query.limit(1);
-    this.relations.forEach(function(attr) {
+    forAttr(this.relations, function(attr) {
         query.include(attr);
     });
     query.find({
@@ -44,7 +45,7 @@ Model.prototype.retrieveModel = function() {
 // It queries the relations of the bookscanner object and updates listeners.
 Model.prototype.modelUpdated = function() {
     var me = this;
-    this.relations.forEach(function(attr) {
+    forAttr(this.relations, function(attr) {
         me.updateModelRelation(attr);
     });
 };
@@ -61,7 +62,7 @@ Model.prototype.updateModelRelation = function(relationName) {
                 relatedObjects.forEach(function (relatedObject) {
                     var state  = me.createdRelationObjectIdsToStates[relatedObject.id];
                     if (!state) {
-                        var constructor = me["create_" + relationName];
+                        var constructor = me.relations[relationName];
                         var state = me.createdRelationObjectIdsToStates[relatedObject.id] = {};
                         function updateState(parseObject) {
                             state.parseObject = parseObject;
@@ -73,15 +74,11 @@ Model.prototype.updateModelRelation = function(relationName) {
                             }
                         }
                         updateState(relatedObject);
-                        if (typeof constructor == "function") {
-                            constructor(state);
-                        }
-                        var updateFunction = me["update_" + relationName];
-                        if (typeof updateFunction == "function") {
+                        state.model = new constructor(state);
+                        if (state.model.update) {
                             notifyOnUpdate(relatedObject, function () {
-                                var updateFunction = me["update_" + relationName];
                                 updateState(relatedObject);
-                                updateFunction(state);
+                                state.model.update(state);
                             });
                         } else {
                             console.log("no update function for " + relationName);
@@ -99,15 +96,6 @@ Model.prototype.updateModelRelation = function(relationName) {
     });
 }
 
-Model.prototype.create_status = function (state) {
-    state.statusElement = new StatusListElement(state.json);
-    console.log("create_status", state);
-}
-
-Model.prototype.update_status = function (state) {
-    state.statusElement.updateModel(state.json);
-    console.log("update_status", state);
-}
 
 
 window.addEventListener("load", function () {

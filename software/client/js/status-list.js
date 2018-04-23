@@ -2,8 +2,10 @@
 
 // create a new status list
 function StatusListElement(model) {
-    this.root = document.createElement("div");
-    this.root.classList.add("statusListElement");
+    this.root = root = document.createElement("div");
+    ["statusListElement", "s-grid-full", "m-grid-half", "l-grid-third", "padded", "bordered"].forEach(function(e){
+        root.classList.add(e);
+    });
     this.addElement("name");
     this.addElement("description");
     this.addElement("state");
