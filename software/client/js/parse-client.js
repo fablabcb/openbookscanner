@@ -50,8 +50,6 @@ function initializeParse() {
     Parse.initialize("OpenBookScanner");
     Parse.serverURL = "http://" + (document.location.hostname || "localhost") + ":1337/parse";
     console.log("Parse server URL is " + Parse.serverURL);
-    p = new ParseSubscriber("OpenBookScannerOutgoing");
-    p.subscribe(new ConsoleMessageLoggingSubscriber("OpenBookScannerOutgoing"));
 }
 
 

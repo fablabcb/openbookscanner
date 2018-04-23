@@ -81,7 +81,10 @@ class ParseUpdater:
         """
         if obj == self.obj:
             self.update()
-        
+    
+    def get_parse_object(self):
+        """This returns the parse object."""
+        return self.parse_object
 
 
 

@@ -97,7 +97,6 @@ def send(channel):
             print("Sending message ...", end="", flush=True)
             for publisher in publishers:
                 publisher.deliver_message(m)
-            print("batch")
             update.batch()
             print(" done.")
 

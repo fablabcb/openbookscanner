@@ -12,6 +12,6 @@ from openbookscanner.cli import cli
 
 try:
     cli()
-except Exception as e:
+except () as e:
     print("e =", e, e.__class__.__qualname__, vars(e))
     pdb.post_mortem()
