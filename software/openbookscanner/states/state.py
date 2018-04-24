@@ -75,9 +75,13 @@ class State:
         """Deliver a message to the state machine which delivers it to the subscribers."""
         self.state_machine.deliver_message(message)
         
-    def __repr__(self):
-        """Return the string representation."""
-        return "<{}>".format(self.__class__.__name__)
+#    def __repr__(self):
+#        """Return the string representation."""
+#        return "<{}>".format(self.__class__.__name__)
+
+    def receive_message_from_other_state(self, message):
+        """Receive a message from the state before this state."""
+        self.receive_message(message)
     
 class FirstState(State):
     """This is the first state so one has a state to come from."""
@@ -147,11 +151,13 @@ class StateMachine(LocalBroker):
     def __repr__(self):
         return "<{} at state {}>".format(self.__class__.__name__, self.state)
 
+
 class FinalState(State):
     """This state can no be left."""
 
     def is_final(self):
         return True
+
 
 class DoneRunning(State):
     """This is the state the state machine goes to if parallel exeuction in a RunningState finishes
@@ -206,8 +212,14 @@ class RunningState(State):
         else:
             if self.future.exception() is not None: # Errors should never pass silently.
                 raise self.future.exception()
+            print(self.next_state, self.future)
             super().transition_into(self.next_state)
-            self.next_state.receive_message(message)
+            self.next_state.receive_message_from_other_state(message)
+
+    def receive_message_from_other_state(self, message):
+        """Discard messages from previous states if I am completed."""
+        if not self.is_running():
+            super().receive_message(message)
 
 
 class PollingState(RunningState):

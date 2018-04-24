@@ -187,10 +187,10 @@ def hardware_listener():
     return TestHardwareListener()
 
 
-def timeout(condition, description, seconds=1, delay=0.001):
+def timeout(condition, description=None, seconds=1, delay=0.001):
     stop = time.time() + seconds
     while stop > time.time() and not condition():
         time.sleep(delay)
-    assert condition(), "The test condition timed out: " + str(description)
+    assert condition(), "The test condition timed out" + (": " + str(description) if description else ".")
 __builtins__["timeout"] = timeout
 

@@ -11,7 +11,6 @@ class Checks:
     could_not_detect_driver_support = False
     
 
-
 class DetectDriverSupport(PollingState, Checks):
     """Check if the necessary software is installed properly."""
     
