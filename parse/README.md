@@ -6,26 +6,29 @@ The parse platform used in this project depends on Postgres with the version >=9
 
 On the Raspberry Pi, you can install the right version by calling the script `install-postgres.sh` found in the `parse` directory of the repository.
 
+#### Create database and user
 
-### node.js and npm
+Run:
+```
+install-postgres-access.sh
+```
 
-If you already have these tools installed, just run `npm update -g` to make sure you're using the newest versions of all packages.
+### NodeJS and npm
+Make sure you have [node](https://nodejs.org/en/) and [yarn](https://yarnpkg.com/en/) installed.
 
-Otherwise call the `install-node.sh` script in the `parse` directory of the repository or get a hold of node.js and npm by using your OS' package manager.
+On the Raspberry Pi, you can install node and friends by calling the script [install-node.sh](parse/install-node.sh).
 
-### Parse Platform
+Then run:
+```
+yarn install
+```
 
-Either call the `install-parse.sh` script in the `parse` directory of the repository, or call `npm install -g parse-server`.
+### Start the server
 
-In the end, run 
-
-`npm list -g depth=0` 
-
-and check if you see 
-
-`parse-server` 
-
-in the output. Then the installation was successful.
+Run:
+```
+yarn run start
+```
 
 ### Troubleshooting
 
