@@ -1,0 +1,16 @@
+{
+  "name": "openbookscanner-parse",
+  "version": "1.0.0",
+  "description": "REST interface for a database to collect IoT data",
+  "main": "index.js",
+  "repository": "https://github.com/fablabcb/openbookscanner",
+  "author": "Nicco Kunzmann",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "parse-server": "^2.7.4"
+  },
+  "scripts": {
+    "start": "PGHOST=localhost parse-server configuration.json \"$@\""
+  }
+}
