@@ -7,6 +7,8 @@ import sys
 from openbookscanner.message import message
 import time
 from openbookscanner.broker import LocalBroker
+import atexit
+
 
 class State:
     """This is the base state for all the states of state machines."""
@@ -82,6 +84,7 @@ class State:
     def receive_message_from_other_state(self, message):
         """Receive a message from the state before this state."""
         self.receive_message(message)
+    
     
 class FirstState(State):
     """This is the first state so one has a state to come from."""
@@ -164,10 +167,23 @@ class DoneRunning(State):
     and no other transition is specified.
     """        
 
+_shutdown = False
+def _python_exit():
+    global _shutdown
+    _shutdown = True
+
+atexit.register(_python_exit)
 
 class RunningState(State):
 
     next_state = _initial_next_state = DoneRunning()
+    
+    def program_exits(self):
+        """The Python program is exiting right now.
+        
+        Please stop running the threads.
+        """
+        return _shutdown
     
     def is_waiting_for_a_message_to_transition_to_the_next_state(self):
         """Return whether the state likes to transition."""
@@ -184,6 +200,9 @@ class RunningState(State):
         
         While running, you can transition_into other states.
         When running is done, the state machine will enter the new state.
+        
+        Please check sometimes for self.program_exits().
+        If this is True, the program is exiting right now and you should stop running.
         """
         
     def is_running(self):
@@ -228,11 +247,16 @@ class PollingState(RunningState):
     timeout = 0.001
 
     def run(self):
-        """Call self.poll() on a regular basis, waiting self.timeout in between."""
+        """Call self.poll() on a regular basis, waiting self.timeout in between.
+        
+        If the Python program stops, a SystemExit error is raised.
+        """
         while not self.is_waiting_for_a_message_to_transition_to_the_next_state():
             self.poll()
             if not self.is_waiting_for_a_message_to_transition_to_the_next_state():
                 time.sleep(self.timeout)
+            if self.program_exits():
+                raise SystemExit("The program is exiting.")
     
     def poll(self):
         """This is called regularly.

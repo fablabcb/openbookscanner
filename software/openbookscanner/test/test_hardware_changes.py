@@ -33,7 +33,20 @@ class TestStateTransition:
     def test_driver_not_supported(self, hardware_listener):
         assert hardware_listener.state.is_detecting_driver_support
         hardware_listener.update()
-        timeout(lambda: hardware_listener.state.could_not_detect_driver_support)
+        @timeout
+        def check_for_state_update():
+            hardware_listener.update()
+            return hardware_listener.state.could_not_detect_driver_support
+        assert not hardware_listener.state.finding_hardware_changes
+
+    def test_driver_is_supported(self, hardware_listener):
+        assert hardware_listener.state.is_detecting_driver_support
+        hardware_listener.driver_support = True
+        @timeout
+        def check_for_state_update():
+            hardware_listener.update()
+            return hardware_listener.state.finding_hardware_changes
+        assert hardware_listener.state.finding_hardware_changes
 
 
 
