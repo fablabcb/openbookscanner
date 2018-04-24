@@ -4,11 +4,23 @@
 
 from .state import StateMachine, PollingState, State
 
+class Checks:
+    """This is a sum of check values."""
+    
+    is_detecting_driver_support = False
+    could_not_detect_driver_support = False
+    
 
-class DetectDriverSupport(PollingState):
+
+class DetectDriverSupport(PollingState, Checks):
     """Check if the necessary software is installed properly."""
     
-    timeout = 1
+    is_detecting_driver_support = True
+    
+    @property
+    def timeout(self):
+        """How long to wait between detections."""
+        return self.state_machine.timout_for_driver_detection
 
     def poll(self):
         """Detect if the hardware is supported."""
@@ -18,28 +30,33 @@ class DetectDriverSupport(PollingState):
             self.transition_into(NotSupported())
 
 
-class NotSupported(DetectDriverSupport):
+class NotSupported(DetectDriverSupport, Checks):
     """The necessary drivers are not installed. Let me chack again ... ."""
+    
+    could_not_detect_driver_support = True
     
     def is_error(self):
         """This is an error state."""
         return True
     
 
-class ListenForHardwareChanges(PollingState):
+class ListenForHardwareChanges(PollingState, Checks):
     """We listen for hardware changes if new hardware can be used."""
     
-    timeout = 0.5
+    @property
+    def timeout(self):
+        """How long to wait between hardware changes."""
+        return self.state_machine.timout_for_hardware_changes
     
     def poll(self):
         """Listen for new hardware."""
         if self.state_machine.has_new_hardware():
             self.transition_into(NotifyAboutNewHardware())
         else:
-            self.listen_for_hardware()
+            self.state_machine.listen_for_hardware()
 
 
-class NotifyAboutNewHardware(State):
+class NotifyAboutNewHardware(State, Checks):
      """Notify all the observers in a threadsave manner about the new hardware changes."""
 
      def on_enter(self):
@@ -61,9 +78,12 @@ class HardwareListener(StateMachine):
     """
     
     first_state = DetectDriverSupport
+    timout_for_driver_detection = 1
+    timout_for_hardware_changes = 0.5
     
     def __init__(self):
         """Create a new hardware listener."""
+        super().__init__()
         self._hardware_observers = []
         self._added_hardware = []
         self._new_hardware = []
@@ -116,7 +136,6 @@ class HardwareListener(StateMachine):
     def has_new_hardware(self):
         """Return whether we have new hardware detected."""
         return bool(self._new_hardware)
-
 
 
 

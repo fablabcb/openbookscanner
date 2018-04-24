@@ -27,6 +27,12 @@ class TestObserver:
         observer.new_hardware_detected.assert_called_once_with(hardware)
 
 
+class TestStateTransition:
+    """Test that the states are correctly transitioned."""
+    
+    def test_driver_not_supported(self, hardware_listener):
+        assert hardware_listener.state.is_detecting_driver_support
+        timeout(lambda: hardware_listener.state.could_not_detect_driver_support)
 
 
 

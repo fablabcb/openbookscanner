@@ -168,6 +168,9 @@ def parse_required():
 class TestHardwareListener(HardwareListener):
 
     driver_support = False
+    
+    timout_for_driver_detection = 0.0001
+    timout_for_hardware_changes = 0.0001
 
     def has_driver_support(self):
         return self.driver_support
@@ -182,4 +185,12 @@ class TestHardwareListener(HardwareListener):
 @fixture
 def hardware_listener():
     return TestHardwareListener()
+
+
+def timeout(condition, description, seconds=1, delay=0.001):
+    stop = time.time() + seconds
+    while stop > time.time() and not condition():
+        time.sleep(delay)
+    assert condition(), "The test condition timed out: " + str(description)
+__builtins__["timeout"] = timeout
 
