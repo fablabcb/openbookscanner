@@ -38,4 +38,7 @@ In this case, this message allows the state to transition.
 """)
 message.test.describe_as("""This is a test message not used in production code.""")
 message.state_changed.describe_as("""When a state machine changes a state, this message is sent.""")
+message.new_book_scanner_server("""This message announces a new book scanner.
 
+This is a debug message which allows you to see if you fetched the right book scanner.
+""")
