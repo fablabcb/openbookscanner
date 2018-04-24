@@ -37,6 +37,8 @@ class DetectDriverSupport(PollingState, Checks):
 class NotSupported(DetectDriverSupport, Checks):
     """The necessary drivers are not installed. Let me chack again ... ."""
     
+    could_not_detect_driver_support = True
+    
     def is_error(self):
         """This is an error state."""
         return True
