@@ -6,7 +6,7 @@ function StatusListElement(model) {
     ["statusListElement", "s-grid-full", "m-grid-half", "l-grid-third", "padded", "bordered"].forEach(function(e){
         root.classList.add(e);
     });
-    this.addElement("name");
+    this.addElement("name", ["centered"]);
     this.addElement("description");
     this.addElement("state");
     this.updateModel(model);
@@ -14,9 +14,12 @@ function StatusListElement(model) {
 }
 
 // this is internally called to add new fields to the gui
-StatusListElement.prototype.addElement = function (name) {
+StatusListElement.prototype.addElement = function (name, classList) {
+    var me = this;
     this[name] = document.createElement("div");
-    this[name].classList.add(name);
+    [name].concat(classList).forEach(function (e) {
+        me[name].classList.add(e);
+    });
     this.root.appendChild(this[name]);
 }
 
