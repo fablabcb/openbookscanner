@@ -10,7 +10,8 @@ class MessageCreator:
     Example:
     
         message = MessageCreator()
-        message.message_name(key="value")
+        m = message.message_name(key="value")
+        m = message("message_name", key="value")
     """
 
     def __getattr__(self, name):
@@ -42,3 +43,4 @@ message.new_book_scanner_server("""This message announces a new book scanner.
 
 This is a debug message which allows you to see if you fetched the right book scanner.
 """)
+
