@@ -1,0 +1,13 @@
+{
+	"appId":       "OpenBookScanner",
+	"masterKey":   "MASTER_KEY",
+	"databaseURI": "postgres://localhost:5432",
+	"logLevel":    "info",
+	"startLiveQueryServer": true,
+	"liveQueryServerOptions": {
+		"# see": "https://github.com/parse-community/parse-server/blob/d19ac077b62965c1ed2c9833f53617d783259053/src/Options/index.js#L149",
+		"classNames": ["ChannelOpenBookScannerIncoming",
+		               "ChannelOpenBookScannerOutgoing"]
+	}
+
+}
