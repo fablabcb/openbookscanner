@@ -131,8 +131,7 @@ class HardwareListener(StateMachine):
 
     def notify_about_new_hardware(self):
         """Notify the hardware observers about lately added hardware.
-        
-        Do not call this from the """
+        """
         while self._new_hardware:
             new_hardware = self._new_hardware.pop()
             for observer in self._hardware_observers:
