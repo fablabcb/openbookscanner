@@ -1,12 +1,14 @@
-from pytest import fixture
-import pytest
-from openbookscanner.states import State, FinalState, StateMachine, PollingState, TransitionOnReceivedMessage
+import os
 import time
+import pytest
+from pytest import fixture
+from openbookscanner.states import State, FinalState, StateMachine, PollingState, TransitionOnReceivedMessage
+from openbookscanner.states.hardware_listener import HardwareListener
 from openbookscanner.broker import LocalBroker, ParseBroker, BufferingBroker
 from unittest.mock import Mock
 from openbookscanner.message import message
-import os
 
+# register parse connection
 from parse_rest.connection import register
 register("OpenBookScanner", "pytest")
 
@@ -158,5 +160,26 @@ def parse_required():
     if "PARSE_API_ROOT" not in os.environ:
        pytest.skip()
 
+#
+# Hardware Listener
+#
 
+
+class TestHardwareListener(HardwareListener):
+
+    driver_support = False
+
+    def has_driver_support(self):
+        return self.driver_support
+    
+    new_hardware = []
+    
+    def listen_for_hardware(self):
+        while self.new_hardware:
+            self.add_new_hardware(self.new_hardware.pop())
+
+
+@fixture
+def hardware_listener():
+    return TestHardwareListener()
 
