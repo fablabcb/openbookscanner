@@ -2,7 +2,7 @@
 
 """
 
-from .state import StateMachine, PollingState, State
+from .state import StateMachine, PollingState, State, TransitionOnReceivedMessage
 
 
 class Checks:
@@ -28,17 +28,21 @@ class DetectDriverSupport(PollingState, Checks):
         if self.state_machine.has_driver_support():
             self.transition_into(ListenForHardwareChanges())
         else:
-            self.transition_into(NotSupported())
+            self.transition_into_not_supported()
+    
+    def transition_into_not_supported(self):
+        self.transition_into(NotSupported())
 
 
 class NotSupported(DetectDriverSupport, Checks):
     """The necessary drivers are not installed. Let me chack again ... ."""
     
-    could_not_detect_driver_support = True
-    
     def is_error(self):
         """This is an error state."""
         return True
+
+    def transition_into_not_supported(self):
+        pass
     
 
 class ListenForHardwareChanges(PollingState, Checks):
@@ -62,12 +66,12 @@ class ListenForHardwareChanges(PollingState, Checks):
 class NotifyAboutNewHardware(State, Checks):
      """Notify all the observers in a threadsave manner about the new hardware changes."""
 
+     finding_hardware_changes = True
+
      def on_enter(self):
          """Notify the observers about the new hardware."""
          self.state_machine.notify_about_new_hardware()
-         self.transition_into(ListenForHardwareChanges())
-
-     finding_hardware_changes = True
+         self.transition_into(TransitionOnReceivedMessage(ListenForHardwareChanges()))
 
 
 class HardwareListener(StateMachine):
@@ -115,6 +119,7 @@ class HardwareListener(StateMachine):
         hardware observers will be notified about the new hadware.
         You can access all added hardware with self.get_hardware().
         """
+        self._added_hardware.append(new_hardware)
         self._new_hardware.append(new_hardware)
 
     def get_hardware(self):
@@ -128,11 +133,13 @@ class HardwareListener(StateMachine):
         If hardware is removed, this is the responsibility of the hardware object.
         """
         self._hardware_observers.append(observer)
+        print("observing", observer, id(self), vars(self))
 
     def notify_about_new_hardware(self):
         """Notify the hardware observers about lately added hardware.
         """
         while self._new_hardware:
+            print("notify_about_new_hardware", self._new_hardware, self._hardware_observers)
             new_hardware = self._new_hardware.pop()
             for observer in self._hardware_observers:
                 observer.new_hardware_detected(new_hardware)

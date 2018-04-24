@@ -3,11 +3,6 @@ from pytest import fixture
 
 class TestObserver:
     """Test the observer behavior."""
-
-    @fixture
-    def observer(self, mock, hardware_listener):
-        hardware_listener.register_hardware_observer(mock)
-        return mock
         
     def test_no_new_hardware(self, observer, hardware_listener):
         assert not hardware_listener.has_new_hardware()
@@ -40,7 +35,6 @@ class TestStateTransition:
         assert not hardware_listener.state.finding_hardware_changes
 
     def test_driver_is_supported(self, hardware_listener):
-        assert hardware_listener.state.is_detecting_driver_support
         hardware_listener.driver_support = True
         @timeout
         def check_for_state_update():
@@ -48,5 +42,15 @@ class TestStateTransition:
             return hardware_listener.state.finding_hardware_changes
         assert hardware_listener.state.finding_hardware_changes
 
-
+    def test_new_hardware_added(self, hardware_listener, observer):
+        hardware_listener.driver_support = True
+        hw = object()
+        hardware_listener.new_test_hardware.append(hw)
+        @timeout
+        def check_for_state_update():
+            #print(hardware_listener.get_hardware(), hardware_listener.new_test_hardware)
+            hardware_listener.update()
+            return observer.new_hardware_detected.called
+        observer.new_hardware_detected.assert_called_once_with(hw)
+        
 

@@ -77,9 +77,9 @@ class State:
         """Deliver a message to the state machine which delivers it to the subscribers."""
         self.state_machine.deliver_message(message)
         
-#    def __repr__(self):
-#        """Return the string representation."""
-#        return "<{}>".format(self.__class__.__name__)
+    def __repr__(self):
+        """Return the string representation."""
+        return "<{} at {}>".format(self.__class__.__name__, hex(id(self)))
 
     def receive_message_from_other_state(self, message):
         """Receive a message from the state before this state."""
@@ -154,6 +154,15 @@ class StateMachine(LocalBroker):
     def __repr__(self):
         return "<{} at state {}>".format(self.__class__.__name__, self.state)
 
+    def print_state_changes(self):
+        """Start printing the state changes."""
+        self.observe_state(PrintStateChanges())
+    
+    def stop(self):
+        """Stop the state machine in case a state is running."""
+        if self.state.is_running():
+            self.state.stop()
+            
 
 class FinalState(State):
     """This state can no be left."""
@@ -167,6 +176,14 @@ class DoneRunning(State):
     and no other transition is specified.
     """        
 
+class ErrorRaisingState(State):
+
+    def __init__(self, error):
+        self.error = error
+
+    def receive_message(self, message):
+        raise self.error
+
 _shutdown = False
 def _python_exit():
     global _shutdown
@@ -177,13 +194,14 @@ atexit.register(_python_exit)
 class RunningState(State):
 
     next_state = _initial_next_state = DoneRunning()
+    _stopped = False
     
-    def program_exits(self):
-        """The Python program is exiting right now.
+    def should_stop(self):
+        """ Please stop running the threads.
         
-        Please stop running the threads.
+        The Python program is exiting right now or it should be stopped.
         """
-        return _shutdown
+        return _shutdown or self._stopped
     
     def is_waiting_for_a_message_to_transition_to_the_next_state(self):
         """Return whether the state likes to transition."""
@@ -201,7 +219,7 @@ class RunningState(State):
         While running, you can transition_into other states.
         When running is done, the state machine will enter the new state.
         
-        Please check sometimes for self.program_exits().
+        Please check sometimes for self.should_stop().
         If this is True, the program is exiting right now and you should stop running.
         """
         
@@ -230,8 +248,7 @@ class RunningState(State):
             super().receive_message(message)
         else:
             if self.future.exception() is not None: # Errors should never pass silently.
-                raise self.future.exception()
-            print(self.next_state, self.future)
+                self.next_state = self.get_error_state()
             super().transition_into(self.next_state)
             self.next_state.receive_message_from_other_state(message)
 
@@ -240,6 +257,14 @@ class RunningState(State):
         if not self.is_running():
             super().receive_message(message)
 
+    def stop(self):
+        """Stop the state if it is running."""
+        self._stopped = True
+        self.wait()
+        
+    def get_error_state(self):
+        """Return the error state."""
+        return ErrorRaisingState(self.future.exception())
 
 class PollingState(RunningState):
     """This state runs the poll function all "timeout" seconds and stops on transition."""
@@ -255,7 +280,7 @@ class PollingState(RunningState):
             self.poll()
             if not self.is_waiting_for_a_message_to_transition_to_the_next_state():
                 time.sleep(self.timeout)
-            if self.program_exits():
+            if self.should_stop():
                 raise SystemExit("The program is exiting.")
     
     def poll(self):
@@ -296,6 +321,10 @@ class TransitionOnReceivedMessage(State):
     def is_waiting_for_a_message_to_transition_to_the_next_state(self):
         """This state always defers the transition until a message arrives."""
         return True
+        
+    def __repr__(self):
+        """The string representation."""
+        return "<{} into {}>".format(self.__class__.__name__, self.next_state)
 
 
 class StateChangeToMessageReceiveAdapter:
@@ -309,3 +338,8 @@ class StateChangeToMessageReceiveAdapter:
         """When the state changes, a message is sent to the publisher."""
         self.publisher.receive_message(message.state_changed(state_machine=state_machine.toJSON()))
 
+class PrintStateChanges:
+
+    def state_changed(self, state_machine):
+        """Print the state change."""
+        print("new state:", state_machine)

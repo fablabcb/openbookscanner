@@ -175,20 +175,37 @@ class TestHardwareListener(HardwareListener):
     
     timout_for_driver_detection = 0.0001
     timout_for_hardware_changes = 0.0001
+    
+    def __init__(self):
+        super().__init__()
+        print("init")
+
 
     def has_driver_support(self):
         return self.driver_support
     
-    new_hardware = []
+    new_test_hardware = []
     
     def listen_for_hardware(self):
-        while self.new_hardware:
-            self.add_new_hardware(self.new_hardware.pop())
+        #print("x")
+        if self.new_test_hardware:
+            print("test1", self.new_test_hardware, self.get_hardware(), id(self), vars(self))
+            self.found_new_hardware(self.new_test_hardware.pop())
+            print("test2", self.new_test_hardware, self.get_hardware(), id(self), vars(self))
 
 
 @fixture
 def hardware_listener():
-    return TestHardwareListener()
+    hl = TestHardwareListener()
+    hl.print_state_changes()
+    yield hl
+    hl.stop()
+
+@fixture
+def observer(hardware_listener):
+    mock = Mock()
+    hardware_listener.register_hardware_observer(mock)
+    return mock
 
 
 def timeout(condition, description=None, seconds=1, delay=0.001):
