@@ -66,12 +66,12 @@ class TestStateMachineObserver:
     """The state machine implements an observer pattern."""
     
     def test_no_state_change_on_update(self, m, mock):
-        m.observe_state(mock)
+        m.register_state_observer(mock)
         m.update()
         mock.state_changed.assert_not_called()
     
     def test_state_change_notifies_observers(self, m, mock):
-        m.observe_state(mock)
+        m.register_state_observer(mock)
         m.receive_message(message.message2())
         mock.state_changed.assert_called_once_with(m)
         

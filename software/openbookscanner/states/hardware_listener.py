@@ -135,13 +135,11 @@ class HardwareListener(StateMachine):
         If hardware is removed, this is the responsibility of the hardware object.
         """
         self._hardware_observers.append(observer)
-        print("observing", observer, id(self), vars(self))
 
     def notify_about_new_hardware(self):
         """Notify the hardware observers about lately added hardware.
         """
         while self._new_hardware:
-            print("notify_about_new_hardware", self._new_hardware, self._hardware_observers)
             new_hardware = self._new_hardware.pop()
             for observer in self._hardware_observers:
                 observer.new_hardware_detected(new_hardware)

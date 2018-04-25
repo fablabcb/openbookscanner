@@ -105,7 +105,7 @@ class StateMachine(LocalBroker):
     - a subscriber
       stm.receive_message(message) sends the message to the state which then can transition
     - an observable
-      state_machine.observe_state(observer) adds a new observer which is notified on state changes
+      state_machine.register_state_observer(observer) adds a new observer which is notified on state changes
       observer.state_changed(stm) notifies the observers about the state change
     """
     
@@ -118,7 +118,7 @@ class StateMachine(LocalBroker):
         self.state = FirstState()
         self.transition_into(self.first_state())
     
-    def observe_state(self, observer):
+    def register_state_observer(self, observer):
         """The observer observes the state of the state machine."""
         self.state_observers.append(observer)
     
@@ -156,12 +156,16 @@ class StateMachine(LocalBroker):
 
     def print_state_changes(self):
         """Start printing the state changes."""
-        self.observe_state(PrintStateChanges())
+        self.register_state_observer(PrintStateChanges())
     
     def stop(self):
         """Stop the state machine in case a state is running."""
         if self.state.is_running():
             self.state.stop()
+            
+    def is_scanner(self):
+        """Whether this state machine is a scanner."""
+        return False
             
 
 class FinalState(State):

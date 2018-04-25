@@ -3,6 +3,7 @@ from .parse_update import ParseUpdater
 from .update_strategy import BatchStrategy
 from .states.status import StatusStateMachine
 from .states.state import StateChangeToMessageReceiveAdapter
+from .states.scanner import ScannerListener
 from parse_rest.datatypes import Object
 from .message import message
 
@@ -40,16 +41,24 @@ class OpenBookScanner:
         self.model = self.ModelClass()
         self.model.save()
         self.outgoing_messages.deliver_message(message.new_book_scanner_server(id=self.model.objectId))
+        # status
         self.status = self.public_state_machine("status", StatusStateMachine())
         self.incoming_messages.subscribe(self.status)
-#        self.model.save()
+        # scanner
+        self.scanner_listener = self.public_state_machine("listener", ScannerListener())
+        self.scanner_listener.register_hardware_observer(self)
+        
+    def new_hardware_detected(self, hardware):
+        """Add new hardware to myself."""
+        if hardware.is_scanner():
+            self.public_state_machine("scanner", hardware)
 
     def public_state_machine(self, relation, state_machine):
         """Make the state machine public"""
         updater = ParseUpdater(state_machine, self.update_strategy)
-        state_machine.observe_state(updater)
+        state_machine.register_state_observer(updater)
         state_machine.subscribe(self.outgoing_messages)
-        state_machine.observe_state(StateChangeToMessageReceiveAdapter(self.outgoing_messages))
+        state_machine.register_state_observer(StateChangeToMessageReceiveAdapter(self.outgoing_messages))
         self.model.relation(relation).add([updater.get_parse_object()])
         return state_machine
 
@@ -61,9 +70,14 @@ class OpenBookScanner:
     
     def update(self):
         """Update the book scanner, send and receive messages."""
+        self.update_state_machines()
         self.incoming_messages.flush()
         self.outgoing_messages.flush()
         self.update_strategy.batch()
+    
+    def update_state_machines(self):
+        """Send an update message to the state machines."""
+        self.scanner_listener.update()
         
     def print_messages(self):
         """Attach a receiver to the message broker to print them."""

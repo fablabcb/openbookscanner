@@ -18,5 +18,5 @@ Status.prototype.update = function (state) {
 
 
 
-const relationsToStateMachines = {"status": Status};
+const relationsToStateMachines = {"status": Status, "listener": Status, "scanner": Status};
 
