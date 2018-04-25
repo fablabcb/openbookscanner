@@ -24,7 +24,7 @@ class ScannerStateMixin:
         return True
 
 
-class NoImagesScanned(State, ScannerStateMixin):
+class WithoutAScannedImage(State, ScannerStateMixin):
     """The scanner just got attached. There is no image to show."""
     
     timeout = 3
@@ -61,9 +61,9 @@ class Scanning(RunningState, ScannerStateMixin):
         command = ["convert", scan_image, jpg_image]
         p = subprocess.run(command, stderr=subprocess.PIPE)
         if p.returncode != 0:
-            self.transition_into(CouldNotConvert(p.stderr.decode()))
+            self.transition_into(UnableToConvertScannedImage(p.stderr.decode()))
             return
-        self.transition_into(HasImage(jpg_image, directory))
+        self.transition_into(HoldingAScannedImage(jpg_image, directory))
 
     
 class AddDescriptionMixin:
@@ -86,7 +86,7 @@ class Unplugged(FinalState, ScannerStateMixin, AddDescriptionMixin):
         return False
 
 
-class CouldNotConvert(NoImagesScanned, AddDescriptionMixin):
+class UnableToConvertScannedImage(WithoutAScannedImage, AddDescriptionMixin):
     """Could not convert the image."""
     
     def is_error(self):
@@ -94,7 +94,7 @@ class CouldNotConvert(NoImagesScanned, AddDescriptionMixin):
         return True
 
 
-class HasImage(NoImagesScanned):
+class HoldingAScannedImage(WithoutAScannedImage):
     """The scanner has an image."""
     
     def __init__(self, image, reference):
@@ -107,7 +107,7 @@ class Scanner(StateMachine):
     
     def first_state(self):
         """Wait for a message to arrive so we can create scanners with no cost."""
-        return TransitionOnReceivedMessage(NoImagesScanned())
+        return TransitionOnReceivedMessage(WithoutAScannedImage())
     
     def __init__(self, listener, number, device, type, model, producer):
         """Create a fixed image scanner."""
@@ -147,6 +147,7 @@ class Scanner(StateMachine):
         json["model"] = self.model
         json["producer"] = self.producer
         json["id"] = self.id
+        json["name"] = "{} № {}".format(self.type, self.number)
         return json
 
 

@@ -34,8 +34,8 @@ function ScannerListEntry(state) {
 
 ScannerListEntry.prototype.update = function (state) {
     this.scanButton.update(state.json);
-    this.name.innerText = state.json.model + " " + state.json.number;
-    this.device.innerText = "(" + state.json.device + ")"
+    this.name.innerText = state.json.name;
+    this.device.innerText = state.json.model + " (" + state.json.device + ")"
     if (state.json.is_plugged_in) {
         this.root.classList.remove("hidden");
     } else {

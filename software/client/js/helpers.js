@@ -37,3 +37,18 @@ function addNamedDivToRoot(me, name, classList) {
     me.root.appendChild(div);
 }
 
+function camelCaseToSpacing(string) {
+    var result = "";
+    for (var i = 0; i < string.length; i += 1) {
+        var character = string.charAt(i);
+        if (character.toLowerCase() == character) {
+            result += character;
+        } else if (i == 0) {
+            result += character.toLowerCase();
+        } else {
+            result += " " + character.toLowerCase();
+        }
+    }
+    return result;
+}
+

@@ -13,7 +13,7 @@ class Checks:
     finding_hardware_changes = False
     
 
-class DetectDriverSupport(PollingState, Checks):
+class DetectingDriverSupport(PollingState, Checks):
     """Check if the necessary software is installed properly."""
     
     is_detecting_driver_support = True
@@ -26,7 +26,7 @@ class DetectDriverSupport(PollingState, Checks):
     def poll(self):
         """Detect if the hardware is supported."""
         if self.state_machine.has_driver_support():
-            self.transition_into(ListenForHardwareChanges())
+            self.transition_into(ListeningForHardwareChanges())
         else:
             self.transition_into_not_supported()
     
@@ -34,7 +34,7 @@ class DetectDriverSupport(PollingState, Checks):
         self.transition_into(NotSupported())
 
 
-class NotSupported(DetectDriverSupport, Checks):
+class NotSupported(DetectingDriverSupport, Checks):
     """The necessary drivers are not installed. Let me chack again ... ."""
     
     could_not_detect_driver_support = True
@@ -52,7 +52,7 @@ class NotSupported(DetectDriverSupport, Checks):
         return json
     
 
-class ListenForHardwareChanges(PollingState, Checks):
+class ListeningForHardwareChanges(PollingState, Checks):
     """We listen for hardware changes if new hardware can be used."""
     
     finding_hardware_changes = True
@@ -65,12 +65,12 @@ class ListenForHardwareChanges(PollingState, Checks):
     def poll(self):
         """Listen for new hardware."""
         if self.state_machine.has_new_hardware():
-            self.transition_into(NotifyAboutNewHardware())
+            self.transition_into(NotifyingAboutNewHardware())
         else:
             self.state_machine.listen_for_hardware()
 
 
-class NotifyAboutNewHardware(State, Checks):
+class NotifyingAboutNewHardware(State, Checks):
      """Notify all the observers in a threadsave manner about the new hardware changes."""
 
      finding_hardware_changes = True
@@ -78,7 +78,7 @@ class NotifyAboutNewHardware(State, Checks):
      def on_enter(self):
          """Notify the observers about the new hardware."""
          self.state_machine.notify_about_new_hardware()
-         self.transition_into(TransitionOnReceivedMessage(ListenForHardwareChanges()))
+         self.transition_into(TransitionOnReceivedMessage(ListeningForHardwareChanges()))
 
 
 class HardwareListener(StateMachine):
@@ -86,14 +86,14 @@ class HardwareListener(StateMachine):
     
     A hardware listener has these states:
     
-    -> DetectDriverSupport - to detect, if we can use this
+    -> DetectingDriverSupport - to detect, if we can use this
       -> NotSupported (error) - no driver was installed, actively waiting for the hardware to be supported.
-    -> ListenForHardwareChanges - to actively scan for hardware changes
+    -> ListeningForHardwareChanges - to actively scan for hardware changes
     
     As all these operations take time, these states run their actions in parallel.
     """
     
-    first_state = DetectDriverSupport
+    first_state = DetectingDriverSupport
     timout_for_driver_detection = 1
     timout_for_hardware_changes = 0.5
     

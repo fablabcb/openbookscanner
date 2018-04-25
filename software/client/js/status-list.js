@@ -20,9 +20,12 @@ StatusListElement.prototype.addElement = function (name, classList) {
 
 // call this if the model changes
 StatusListElement.prototype.updateModel = function (model) {
-    this.name.innerText = (model.type || "");
+    this.name.innerText = "The " + camelCaseToSpacing(model.type);
+    if (model.name) {
+        this.name.innerText += " \"" + model.name + "\"";
+    }
     if (model.state.type) {
-        this.name.innerText += " in \"" + model.state.type + "\"";
+        this.name.innerText += " is " + camelCaseToSpacing(model.state.type) + ".";
     }
     this.description.innerText = model.description;
     this.state.innerText = model.state.description;
