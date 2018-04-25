@@ -15,17 +15,15 @@ function StatusListElement(model) {
 
 // this is internally called to add new fields to the gui
 StatusListElement.prototype.addElement = function (name, classList) {
-    var me = this;
-    this[name] = document.createElement("div");
-    [name].concat(classList).forEach(function (e) {
-        me[name].classList.add(e);
-    });
-    this.root.appendChild(this[name]);
+    addNamedDivToRoot(this, name, classList);
 }
 
 // call this if the model changes
 StatusListElement.prototype.updateModel = function (model) {
-    this.name.innerText = model.type || "";
+    this.name.innerText = (model.type || "");
+    if (model.state.type) {
+        this.name.innerText += " in \"" + model.state.type + "\"";
+    }
     this.description.innerText = model.description;
     this.state.innerText = model.state.description;
 }

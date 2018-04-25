@@ -29,3 +29,11 @@ function deepEqual(x, y) {
       }, true) : (x === y);
 }
 
+function addNamedDivToRoot(me, name, classList) {
+    var div = me[name] = me.root[name] = document.createElement("div");
+    [name].concat(classList || []).forEach(function (e) {
+        div.classList.add(e);
+    });
+    me.root.appendChild(div);
+}
+

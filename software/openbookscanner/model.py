@@ -52,6 +52,7 @@ class OpenBookScanner:
         """Add new hardware to myself."""
         if hardware.is_scanner():
             self.public_state_machine("scanner", hardware)
+            self.incoming_messages.subscribe(hardware)
 
     def public_state_machine(self, relation, state_machine):
         """Make the state machine public"""

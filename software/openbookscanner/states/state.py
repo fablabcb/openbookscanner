@@ -36,7 +36,8 @@ class State:
         return {"type": self.__class__.__name__,
                 "is_final": self.is_final(),
                 "description": self.__class__.__doc__,
-                "is_waiting_for_a_message_to_transition_to_the_next_state": self.is_waiting_for_a_message_to_transition_to_the_next_state()
+                "is_waiting_for_a_message_to_transition_to_the_next_state": self.is_waiting_for_a_message_to_transition_to_the_next_state(), 
+                "is_error": self.is_error()
                 }
     
     def is_final(self):
@@ -84,6 +85,10 @@ class State:
     def receive_message_from_other_state(self, message):
         """Receive a message from the state before this state."""
         self.receive_message(message)
+    
+    def is_error(self):
+        """Whether this state is an error state."""
+        return False
     
     
 class FirstState(State):
@@ -174,18 +179,27 @@ class FinalState(State):
     def is_final(self):
         return True
 
+class ErrorState(State):
+    """This state is an error state."""
+
+    def is_final(self):
+        return True
+
 
 class DoneRunning(State):
     """This is the state the state machine goes to if parallel exeuction in a RunningState finishes
     and no other transition is specified.
     """        
 
-class ErrorRaisingState(State):
+class ErrorRaisingState(ErrorState):
+    """This state raises the error it was created with once a message is received."""
 
     def __init__(self, error):
+        """Create a new state which raises the error."""
         self.error = error
 
     def receive_message(self, message):
+        """Raise the error, do not handle the message."""
         raise self.error
 
 _shutdown = False
@@ -270,6 +284,7 @@ class RunningState(State):
         """Return the error state."""
         return ErrorRaisingState(self.future.exception())
 
+
 class PollingState(RunningState):
     """This state runs the poll function all "timeout" seconds and stops on transition."""
     
@@ -292,6 +307,7 @@ class PollingState(RunningState):
         
         When you use self.transition_into(new_state), this will not be called any more.
         """
+
 
 class TransitionOnReceivedMessage(State):
     """This state waits for a message to be received and then transitions into the text state.
@@ -341,6 +357,7 @@ class StateChangeToMessageReceiveAdapter:
     def state_changed(self, state_machine):
         """When the state changes, a message is sent to the publisher."""
         self.publisher.receive_message(message.state_changed(state_machine=state_machine.toJSON()))
+
 
 class PrintStateChanges:
 

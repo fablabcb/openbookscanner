@@ -46,6 +46,11 @@ class NotSupported(DetectDriverSupport, Checks):
     def transition_into_not_supported(self):
         pass
     
+    def toJSON(self):
+        json = super().toJSON()
+        json["description"] = self.__class__.__doc__ + self.state_machine.driver_message
+        return json
+    
 
 class ListenForHardwareChanges(PollingState, Checks):
     """We listen for hardware changes if new hardware can be used."""
@@ -91,6 +96,8 @@ class HardwareListener(StateMachine):
     first_state = DetectDriverSupport
     timout_for_driver_detection = 1
     timout_for_hardware_changes = 0.5
+    
+    driver_message = "The necessary drivers need to be installed."
     
     def __init__(self):
         """Create a new hardware listener."""
