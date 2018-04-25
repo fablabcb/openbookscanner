@@ -50,6 +50,7 @@ class OpenBookScanner:
         
     def new_hardware_detected(self, hardware):
         """Add new hardware to myself."""
+        print("new hardware", hardware)
         if hardware.is_scanner():
             self.public_state_machine("scanner", hardware)
             self.incoming_messages.subscribe(hardware)
@@ -79,6 +80,7 @@ class OpenBookScanner:
     def update_state_machines(self):
         """Send an update message to the state machines."""
         self.scanner_listener.update()
+        self.scanner_listener.update_hardware()
         
     def print_messages(self):
         """Attach a receiver to the message broker to print them."""

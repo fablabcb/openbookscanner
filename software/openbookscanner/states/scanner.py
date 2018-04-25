@@ -4,7 +4,7 @@ This module controls the scanners.
 """
 
 from .hardware_listener import HardwareListener
-from .state import StateMachine, RunningState, FinalState, State, TransitionOnReceivedMessage
+from .state import StateMachine, RunningState, FinalState, State, TransitionOnReceivedMessage, PollingState
 import subprocess
 
 class ScannerStateMixin:
@@ -18,14 +18,25 @@ class ScannerStateMixin:
     def can_scan(self):
         """Whether the scanner is able to scan right now."""
         return False
+    
+    def is_plugged_in(self):
+        """Whether the scanner is plugged in"""
+        return True
 
 
 class NoImagesScanned(State, ScannerStateMixin):
     """The scanner just got attached. There is no image to show."""
+    
+    timeout = 3
 
     def receive_scan(self, message):
         """Scan an image."""
         self.transition_into(Scanning)
+        
+    def receive_update(self, message):
+        if self.scanner.device not in self.scanner.listener.list_currect_device_ids():
+            self.transition_into(Unplugged("Scanner unplugged."))
+            return
 
     def can_scan(self):
         """The scanner is able to scan right now."""
@@ -67,8 +78,12 @@ class AddDescriptionMixin:
         return json
 
     
-class Unplugged(FinalState, ScannerStateMixin):
+class Unplugged(FinalState, ScannerStateMixin, AddDescriptionMixin):
     """The scanner can not be used because it was unplugged from the computer."""
+
+    def is_plugged_in(self):
+        """Whether the scanner is plugged in"""
+        return False
 
 
 class CouldNotConvert(NoImagesScanned, AddDescriptionMixin):
@@ -79,24 +94,12 @@ class CouldNotConvert(NoImagesScanned, AddDescriptionMixin):
         return True
 
 
-class HasImage(State, ScannerStateMixin):
+class HasImage(NoImagesScanned):
     """The scanner has an image."""
     
     def __init__(self, image, reference):
         self.image = image
         self.reference = reference
-
-    def receive_scan(self, message):
-        """Scan an image."""
-        self.transition_into(Scanning())
-
-    def can_scan(self):
-        """The scanner is able to scan right now."""
-        return True
-    
-    
-class ScannerTransitionOnReceivedMessage(TransitionOnReceivedMessage, ScannerStateMixin):
-    pass
 
 
 class Scanner(StateMachine):
@@ -104,9 +107,9 @@ class Scanner(StateMachine):
     
     def first_state(self):
         """Wait for a message to arrive so we can create scanners with no cost."""
-        return ScannerTransitionOnReceivedMessage(NoImagesScanned())
+        return TransitionOnReceivedMessage(NoImagesScanned())
     
-    def __init__(self, number, device, type, model, producer):
+    def __init__(self, listener, number, device, type, model, producer):
         """Create a fixed image scanner."""
         super().__init__()
         self.number = number
@@ -115,6 +118,7 @@ class Scanner(StateMachine):
         self.model = model
         self.producer = producer
         self.id = self.device
+        self.listener = listener
         
     def is_scanner(self):
         """This is a scanner."""
@@ -134,7 +138,9 @@ class Scanner(StateMachine):
     
     def toJSON(self):
         json = super().toJSON()
-        json["can_scan"] = self.state.can_scan()
+        if isinstance(self.state, ScannerStateMixin):
+            json["can_scan"] = self.state.can_scan()
+            json["is_plugged_in"] = self.state.is_plugged_in()
         json["number"] = self.number
         json["device"] = self.device
         json["hardware"] = self.type
@@ -156,6 +162,17 @@ class ScannerListener(HardwareListener):
 
     """
     
+    timout_for_hardware_changes = 3
+    timout_for_driver_detection = 10
+    
+    def __init__(self):
+        super().__init__()
+        self.device_list = set()
+        self.new_device_list = set()
+        
+    def list_currect_device_ids(self):
+        return self.device_list | self.new_device_list
+    
     def has_driver_support(self):
         """Check if scanimage is installed."""
         # from https://stackoverflow.com/a/11270665
@@ -167,12 +184,16 @@ class ScannerListener(HardwareListener):
         """See if we have hardware installed."""
         p = subprocess.run(["scanimage", "-f", "%i|%d|%t|%m|%v"],
                            stdout=subprocess.PIPE, check=True)
+        self.new_device_list = set()
         for line in p.stdout.decode().splitlines():
             number, device, type, model, producer = line.split("|")
-            scanner = Scanner(number, device, type, model, producer)
+            self.new_device_list.add(device)
+            scanner = Scanner(self, number, device, type, model, producer)
             if scanner not in self.get_hardware():
                 self.found_new_hardware(scanner)
                 scanner.update()
+        self.device_list = self.new_device_list
+        
             
       
     

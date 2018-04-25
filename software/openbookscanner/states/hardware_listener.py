@@ -155,5 +155,8 @@ class HardwareListener(StateMachine):
         """Return whether we have new hardware detected."""
         return bool(self._new_hardware)
 
-
+    def update_hardware(self):
+        """Update all the hardware."""
+        for hardware in self.get_hardware():
+            hardware.update()
 

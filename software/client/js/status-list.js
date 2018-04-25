@@ -26,6 +26,11 @@ StatusListElement.prototype.updateModel = function (model) {
     }
     this.description.innerText = model.description;
     this.state.innerText = model.state.description;
+    if (model.state.is_final) {
+        this.root.classList.add("final");
+    } else {
+        this.root.classList.remove("final");
+    }
 }
 
 

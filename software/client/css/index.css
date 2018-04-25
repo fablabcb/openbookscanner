@@ -34,3 +34,10 @@ footer a {
   display: inline-block;
 }
 
+.hidden {
+    display: none;
+}
+
+.statusListElement.final {
+    color: #888888;
+}

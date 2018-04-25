@@ -16,12 +16,14 @@ Status.prototype.update = function (state) {
 };
 
 // This is a state machine specially for scanners.
-function Scanner(state) {
-    this.root = document.createElement("div");
-    this.root.classList.add("scanner");
+function ScannerListEntry(state) {
+    var root = this.root = document.createElement("div");
+    ["scanner", "s-grid-full", "m-grid-half", "l-grid-third", "padded", "bordered"].forEach(function(e){
+        root.classList.add(e);
+    });
     addNamedDivToRoot(this, "name");
     addNamedDivToRoot(this, "device");
-    this.scanButton = new StateButton(state.json, "can_scan", "Scan!", function(){
+    this.scanButton = new StateButton("can_scan", "Scan!", function() {
         console.log("scan " + state.json.id + "!");
     });
     this.root.appendChild(this.scanButton.getHTMLElement());
@@ -30,12 +32,17 @@ function Scanner(state) {
     this.update(state);
 }
 
-Scanner.prototype.update = function (state) {
+ScannerListEntry.prototype.update = function (state) {
     this.scanButton.update(state.json);
     this.name.innerText = state.json.model + " " + state.json.number;
     this.device.innerText = "(" + state.json.device + ")"
+    if (state.json.is_plugged_in) {
+        this.root.classList.remove("hidden");
+    } else {
+        this.root.classList.add("hidden");
+    }
 };
 
 
-const relationsToStateMachineViews = {"status": [Status], "listener": [Status], "scanner": [Status, Scanner]};
+const relationsToStateMachineViews = {"status": [Status], "listener": [Status], "scanner": [Status, ScannerListEntry]};
 
