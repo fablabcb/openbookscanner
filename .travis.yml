@@ -1,0 +1,34 @@
+language: python
+
+python:
+  # https://docs.travis-ci.com/user/languages/python/#Specifying-Python-versions
+  - "3.4"
+  - "3.5"
+  - "3.6"
+
+addons:
+  # https://docs.travis-ci.com/user/database-setup/#Using-a-different-PostgreSQL-Version
+  postgresql: "9.6"
+  apt:
+    packages:
+    - postgresql-9.6
+    - postgresql-client-9.6
+env:
+  global:
+  - PGPORT=5432
+
+install:
+  - cd parse
+  - ./install-parse.sh
+  - cd ../software
+  - pip install -r requirements.txt -r test-requirements.txt
+  - cd ..
+
+before_script:
+  - cd parse
+  - ./start-parse-server.sh &
+  - sleep 1
+
+script:
+  - pytest # or py.test for Python versions 3.5 and belowcould_not_detect_driver_support = False
+
