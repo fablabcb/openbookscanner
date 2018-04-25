@@ -9,7 +9,7 @@ function Model() {
     this.outgoingMessages = new ParseSubscriber("OpenBookScannerOutgoing");
     this.outgoingMessages.subscribe(new ConsoleMessageLoggingSubscriber("OpenBookScannerOutgoing"));
     this.modelClass = Parse.Object.extend(PUBLIC_MODEL_CLASS_NAME);
-    this.relations = relationsToStateMachines;
+    this.relations = relationsToStateMachineViews;
     this.createdRelationObjectIdsToStates = {};
     this.retrieveModel();
 }
@@ -62,7 +62,6 @@ Model.prototype.updateModelRelation = function(relationName) {
                 relatedObjects.forEach(function (relatedObject) {
                     var state  = me.createdRelationObjectIdsToStates[relatedObject.id];
                     if (!state) {
-                        var constructor = me.relations[relationName];
                         var state = me.createdRelationObjectIdsToStates[relatedObject.id] = {};
                         function updateState(parseObject) {
                             state.parseObject = parseObject;
@@ -74,18 +73,18 @@ Model.prototype.updateModelRelation = function(relationName) {
                             }
                         }
                         updateState(relatedObject);
-                        state.model = new constructor(state);
-                        if (state.model.update) {
-                            notifyOnUpdate(relatedObject, function () {
-                                updateState(relatedObject);
-                                state.model.update(state);
+                        state.views = [];
+                        me.relations[relationName].forEach(function(constructor) {
+                            state.views.push(new constructor(state));
+                        });
+                        notifyOnUpdate(relatedObject, function (relatedObject) {
+                            updateState(relatedObject);
+                            state.views.forEach(function(view){
+                                view.update(state);
                             });
-                        } else {
-                            console.log("no update function for " + relationName);
-                        }
+                        });
                     } else {
-                        console.log("relation " + relationName + " for " + relatedObject.id + " is not updated.")
-                        me["update_" + relationName](relatedObject, state);
+                        console.log("Relation " + relationName + " for " + relatedObject.id + " already exists.");
                     }
                 });
             } catch (e) {

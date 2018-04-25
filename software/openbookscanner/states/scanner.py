@@ -32,6 +32,10 @@ class Scanner(StateMachine):
     def __hash__(self):
         """Return the hash value."""
         return hash(self.id)
+    
+    def __repr__(self):
+        """String representation."""
+        return "<{} with id {}>".format(self.__class__.__name__, self.id)
 
 
 class ScannerListener(HardwareListener):
