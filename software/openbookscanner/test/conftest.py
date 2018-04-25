@@ -8,9 +8,9 @@ from openbookscanner.broker import LocalBroker, ParseBroker, BufferingBroker
 from unittest.mock import Mock
 from openbookscanner.message import message
 
-import hanging_threads
-
-hanging_threads.start_monitoring()
+#import hanging_threads
+#
+#hanging_threads.start_monitoring()
 
 # register parse connection
 from parse_rest.connection import register
