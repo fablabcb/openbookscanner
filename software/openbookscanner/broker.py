@@ -115,6 +115,7 @@ class ParsePublisher:
         """Deliver a message to all Subscribers on a channel."""
         message = json.dumps(message)
         for subscriber in self.message_holder_class.Query.all():
+#            print("deliver", message, "to", subscriber)
             subscriber.addToArray("messages", [message])
 #            self.update_strategy.save(subscriber)
     

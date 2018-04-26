@@ -9,6 +9,7 @@ var model;
 function Model() {
     this.outgoingMessages = new ParseSubscriber(CHANNEL_NAME_FROM_BOOKSCANNER);
     this.outgoingMessages.subscribe(new ConsoleMessageLoggingSubscriber(CHANNEL_NAME_FROM_BOOKSCANNER));
+    this.outgoingMessages.subscribe(new ReloadWhenBookscannerRestarts());
     this.incomingMessages = new ParsePublisher(CHANNEL_NAME_TO_BOOKSCANNER);
     this.modelClass = Parse.Object.extend(PUBLIC_MODEL_CLASS_NAME);
     this.relations = relationsToStateMachineViews;

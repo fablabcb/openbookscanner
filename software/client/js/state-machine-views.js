@@ -25,6 +25,7 @@ function ScannerListEntry(state) {
     addNamedDivToRoot(this, "device");
     this.scanButton = new StateButton("can_scan", "Scan!", function() {
         console.log("scan " + state.json.id + "!");
+        model.deliverMessage(message("scan", {"id": state.json.id}));
     });
     this.root.appendChild(this.scanButton.getHTMLElement());
     var scanners = document.getElementById("scanner-list");

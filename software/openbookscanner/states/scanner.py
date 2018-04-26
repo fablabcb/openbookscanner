@@ -6,6 +6,7 @@ This module controls the scanners.
 from .hardware_listener import HardwareListener
 from .state import StateMachine, RunningState, FinalState, State, TransitionOnReceivedMessage, PollingState
 import subprocess
+import tempfile
 
 class ScannerStateMixin:
     """Shorcut methods for scanner states."""
@@ -31,7 +32,7 @@ class WithoutAScannedImage(State, ScannerStateMixin):
 
     def receive_scan(self, message):
         """Scan an image."""
-        self.transition_into(Scanning)
+        self.transition_into(Scanning())
         
     def receive_update(self, message):
         if self.scanner.device not in self.scanner.listener.list_currect_device_ids():

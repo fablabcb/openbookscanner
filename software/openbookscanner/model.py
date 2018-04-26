@@ -40,6 +40,8 @@ class OpenBookScanner:
         """This creates the model which is observable by the client."""
         self.model = self.ModelClass()
         self.model.save()
+        # messaging
+        self.outgoing_messages.subscribe(self.outgoing_messages_publisher)
         self.outgoing_messages.deliver_message(message.new_book_scanner_server(id=self.model.objectId))
         # status
         self.status = self.public_state_machine("status", StatusStateMachine())
@@ -72,8 +74,8 @@ class OpenBookScanner:
     
     def update(self):
         """Update the book scanner, send and receive messages."""
-        self.update_state_machines()
         self.incoming_messages.flush()
+        self.update_state_machines()
         self.outgoing_messages.flush()
         self.update_strategy.batch()
     

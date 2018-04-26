@@ -106,6 +106,16 @@ function ConsoleMessageLoggingSubscriber(channelName) {
     }
 }
 
+function ReloadWhenBookscannerRestarts(channelName) {
+    this.receiveMessage = function(message) {
+        if (message.name == "new_book_scanner_server") {
+            document.location.reload();
+        }
+    }
+}
+
+
+// send messages to other subscribers
 function ParsePublisher(channelName) {
     this.channelName = channelName;
     this.channelClass = getChannelClass(this.channelName);
@@ -120,7 +130,6 @@ ParsePublisher.prototype.deliverMessage = function(message) {
     query.find({
         "success": function(subscribers) {
             try {
-                console.log("subscribers", subscribers);
                 subscribers.forEach(function (subscriber) {
                     subscriber.add("messages", messageString);
                     subscriber.save();
@@ -134,7 +143,19 @@ ParsePublisher.prototype.deliverMessage = function(message) {
 };
 
 
+const MESSAGE_TEMPLATES = {
+    "test": {"description": "This is a test message not used in production code."},
+    "scan": {"description": "Tell a scanner to scan."}
+};
 
+const DEFAULT_MESSAGE = {"type": "message", "from":"client"};
+
+
+function message(name, obj) {
+    // from https://stackoverflow.com/a/30042948
+    // see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
+    return Object.assign({"name": name}, DEFAULT_MESSAGE, MESSAGE_TEMPLATES[name] || {}, obj || {}); 
+}
 
 
 
