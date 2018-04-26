@@ -1,13 +1,15 @@
 
 const PUBLIC_MODEL_CLASS_NAME = "OpenBookScanner";
-
+const CHANNEL_NAME_FROM_BOOKSCANNER = "OpenBookScannerOutgoing";
+const CHANNEL_NAME_TO_BOOKSCANNER = "OpenBookScannerIncoming";
 
 var model;
 
 // This is the model class for the whole open book scanner
 function Model() {
-    this.outgoingMessages = new ParseSubscriber("OpenBookScannerOutgoing");
-    this.outgoingMessages.subscribe(new ConsoleMessageLoggingSubscriber("OpenBookScannerOutgoing"));
+    this.outgoingMessages = new ParseSubscriber(CHANNEL_NAME_FROM_BOOKSCANNER);
+    this.outgoingMessages.subscribe(new ConsoleMessageLoggingSubscriber(CHANNEL_NAME_FROM_BOOKSCANNER));
+    this.incomingMessages = new ParsePublisher(CHANNEL_NAME_TO_BOOKSCANNER);
     this.modelClass = Parse.Object.extend(PUBLIC_MODEL_CLASS_NAME);
     this.relations = relationsToStateMachineViews;
     this.createdRelationObjectIdsToStates = {};
@@ -95,6 +97,10 @@ Model.prototype.updateModelRelation = function(relationName) {
     });
 }
 
+// deliver a message to the bookscanner
+Model.prototype.deliverMessage = function(message) {
+    this.incomingMessages.deliverMessage(message);
+}
 
 
 window.addEventListener("load", function () {

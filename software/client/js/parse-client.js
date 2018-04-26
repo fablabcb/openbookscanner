@@ -5,8 +5,6 @@ const CHANNEL_CLASS_PREFIX = "Channel";
 const APPLICATION_ID = "OpenBookScanner";
 
 
-var p;
-
 var fetchObjects = [];
 
 /* add a parseObject to watch for updates and call a function onSuccess and onError */
@@ -108,17 +106,42 @@ function ConsoleMessageLoggingSubscriber(channelName) {
     }
 }
 
+function ParsePublisher(channelName) {
+    this.channelName = channelName;
+    this.channelClass = getChannelClass(this.channelName);
+};
+
+
+ParsePublisher.prototype.deliverMessage = function(message) {
+    var me = this;
+    var query = new Parse.Query(this.channelClass);
+    // Retrieve the most recent ones
+    var messageString = JSON.stringify(message);
+    query.find({
+        "success": function(subscribers) {
+            try {
+                console.log("subscribers", subscribers);
+                subscribers.forEach(function (subscriber) {
+                    subscriber.add("messages", messageString);
+                    subscriber.save();
+                });
+            } catch (e) {
+                console.log(e);
+                throw e;
+            }
+        }
+    });
+};
+
+
+
+
+
+
+
+
+
 window.addEventListener("load", initializeParse);
-
-
-
-
-
-
-
-
-
-
 
 
 /* If one day we get liveQuery to work.
