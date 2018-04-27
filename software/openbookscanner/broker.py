@@ -149,7 +149,6 @@ class ParseBroker:
         self.subscriber.delete()
 
 
-
 class MessagePrintingSubscriber:
     """When the this object receives a message, it prints it.
     

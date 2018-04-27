@@ -1,4 +1,5 @@
-from .broker import ParseBroker, MessagePrintingSubscriber, ParsePublisher, BufferingBroker, ParseSubscriber, LocalBroker
+import time
+from .broker import MessagePrintingSubscriber, ParsePublisher, BufferingBroker, ParseSubscriber, LocalBroker
 from .parse_update import ParseUpdater
 from .update_strategy import BatchStrategy
 from .states.status import StatusStateMachine
@@ -6,9 +7,8 @@ from .states.state import StateChangeToMessageReceiveAdapter
 from .states.scanner import ScannerListener
 from parse_rest.datatypes import Object
 from .message import message
-#from .images import UploadingImagesObserver
-
-import time
+from .storage import UserDefinedStorageLocation
+from .conversion import Converter
 
 
 PUBLIC_MODEL_CLASS_NAME = "OpenBookScanner"
@@ -51,6 +51,23 @@ class OpenBookScanner:
         # scanner
         self.scanner_listener = self.public_state_machine("listener", ScannerListener())
         self.scanner_listener.register_hardware_observer(self)
+        # conversion
+        self.converter = Converter()
+        self.internal_messages.subscribe(self.converter)
+        self.converter.subscribe(self.internal_messages)
+        # storage
+        self.storage_location = UserDefinedStorageLocation()
+        self.parse_storage_location = ParseUpdater(self.storage_location, self.update_strategy)
+        self.storage_location.register_state_observer(self.parse_storage_location)
+        self.incoming_messages.subscribe(self.storage_location)
+        self.internal_messages.subscribe(self.storage_location)
+        self.storage_location.subscribe(self.internal_messages)
+        self.storage_location.run_in_parallel()
+        self.relate_to("storage", self.parse_storage_location)
+    
+    def relate_to(self, relation, updater):
+        """Relate to an updater over a defined relation."""
+        self.model.relation(relation).add([updater.get_parse_object()])
         
     def new_hardware_detected(self, hardware):
         """Add new hardware to myself."""
@@ -67,14 +84,13 @@ class OpenBookScanner:
         self.incoming_messages.subscribe(scanner)
 #        scanner.notify_about_new_image(UploadingImagesObserver(self.update_strategy))
 
-
     def public_state_machine(self, relation, state_machine):
         """Make the state machine public"""
         updater = ParseUpdater(state_machine, self.update_strategy)
         state_machine.register_state_observer(updater)
         state_machine.subscribe(self.outgoing_messages)
         state_machine.register_state_observer(StateChangeToMessageReceiveAdapter(self.internal_messages))
-        self.model.relation(relation).add([updater.get_parse_object()])
+        self.relate_to(relation, updater)
         return state_machine
 
     def run(self):

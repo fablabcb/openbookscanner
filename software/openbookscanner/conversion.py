@@ -4,6 +4,10 @@
 from .message import MessageReceiver, message
 from openbookscanner.broker import LocalBroker
 import tempfile
+from .file_server import NullFileServer
+from flask import send_file
+import os
+import shutil
 
 
 class Image:
@@ -11,11 +15,38 @@ class Image:
     
     def __init__(self, scanner, path, mime_type, reference):
         """Create a new image."""
-        self.id = id(self)
         self.scanner = scanner
         self.path = path
+        self.additional_paths = []
         self.mime_type = mime_type
         self.reference = reference
+        self.server = NullFileServer()
+    
+    def get_id(self):
+        """Return the id of the image."""
+        return str(id(self))
+        
+    def get_storage_file_name(self):
+        return self.get_id() + os.path.splitext(self.path)[1]
+        
+    def served_by(self, server):
+        """This image is served by a server."""
+        self.server = server
+    
+    def flask_send_file(self):
+        """Send this as a response of a flask server."""
+        send_file(self.path, mimetype=self.mime_type)
+    
+    def toJSON(self):
+        """Return the JSON represenation of the image."""
+        return {"url": {"path": self.server.get_file_content_path(self), "port": self.server.get_port()},
+                "mimetype": self.mime_type, "paths": [self.path] + self.additional_paths,
+                "type": self.__class__.__name__}
+    
+    def copy_to(self, path):
+        """Store at the other location."""
+        shutil.copy(self.path, path)
+        self.additional_paths.append(path)
         
 
 class ConvertCommand:
@@ -34,7 +65,7 @@ class ConvertCommand:
         return Image(scan.get_scanner(), jpg_image, self.mime_type, directory)
 
 
-class Converter(LocalBroker, MessageReceiver):
+class Converter(MessageReceiver, LocalBroker):
     """Convert images in different ways."""
     
     def __init__(self):

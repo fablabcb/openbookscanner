@@ -41,8 +41,6 @@ class ScannerStateMixin:
         json["has_an_image"] = self.has_an_image()
         json["can_scan"] = self.can_scan()
         json["is_plugged_in"] = self.is_plugged_in()
-        if self.has_an_image():
-            json["image_path"] = self.get_image_path()
         return json
 
 
@@ -215,8 +213,8 @@ class Scanner(StateMachine):
     def toJSON(self):
         """Return a JSON representation of the object."""
         json = super().toJSON()
-        json["can_scan"] = getattr(self.state, can_scan, lambda: False)()
-        json["is_plugged_in"] = getattr(self.state, is_plugged_in, lambda: False)()
+        json["can_scan"] = getattr(self.state, "can_scan", lambda: False)()
+        json["is_plugged_in"] = getattr(self.state, "is_plugged_in", lambda: False)()
         json["number"] = self.number
         json["device"] = self.device
         json["hardware"] = self.type
