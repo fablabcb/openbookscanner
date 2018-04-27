@@ -24,15 +24,20 @@ StatusListElement.prototype.updateModel = function (model) {
     if (model.name) {
         this.name.innerText += " \"" + model.name + "\"";
     }
-    if (model.state.type) {
-        this.name.innerText += " is " + camelCaseToSpacing(model.state.type) + ".";
-    }
-    this.description.innerText = model.description;
-    this.state.innerText = model.state.description;
-    if (model.state.is_final) {
-        this.root.classList.add("final");
+    if (model.state) {
+        if (model.state.type) {
+            this.name.innerText += " is " + camelCaseToSpacing(model.state.type) + ".";
+        }
+        this.description.innerText = model.description;
+        this.state.innerText = model.state.description;
+        if (model.state.is_final) {
+            this.root.classList.add("final");
+        } else {
+            this.root.classList.remove("final");
+        }
+        this.state.classList.remove("hidden");
     } else {
-        this.root.classList.remove("final");
+        this.state.classList.add("hidden");
     }
 }
 

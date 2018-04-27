@@ -4,6 +4,7 @@ from .message import MessageReceiver, message
 from openbookscanner.broker import LocalBroker
 import tempfile
 from .file_server import FileServer
+import os
 
 
 class DirectoryStorage:
@@ -32,7 +33,7 @@ class TemporaryStorageLocation(DirectoryStorage):
     
     def __init__(self):
         """Create a temporary storage location."""
-        self.__temp_directory = tempfile.TemporaryDirectory(prefix="OpenBookScanner")
+        self.__temp_directory = tempfile.TemporaryDirectory(prefix="OpenBookScanner-")
         super().__init__(self.__temp_directory.name)
     
 
@@ -70,7 +71,8 @@ class UserDefinedStorageLocation(MessageReceiver, LocalBroker):
     
     def toJSON(self):
         """Return a JSON represenation."""
-        return {"type": self.__class__.__name__, "storage": self.storage.toJSON()}
+        return {"type": self.__class__.__name__, "storage": self.storage.toJSON(), 
+                "description": self.__class__.__doc__}
         
     def run_in_parallel(self):
         """Run the server in parellel."""

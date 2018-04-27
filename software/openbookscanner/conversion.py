@@ -8,6 +8,7 @@ from .file_server import NullFileServer
 from flask import send_file
 import os
 import shutil
+import subprocess
 
 
 class Image:
@@ -16,11 +17,15 @@ class Image:
     def __init__(self, scanner, path, mime_type, reference):
         """Create a new image."""
         self.scanner = scanner
-        self.path = path
-        self.additional_paths = []
+        self.paths = [path]
         self.mime_type = mime_type
         self.reference = reference
         self.server = NullFileServer()
+    
+    @property
+    def path(self):
+        """Return the main path of the image."""
+        return self.paths[0]
     
     def get_id(self):
         """Return the id of the image."""
@@ -35,19 +40,24 @@ class Image:
     
     def flask_send_file(self):
         """Send this as a response of a flask server."""
-        send_file(self.path, mimetype=self.mime_type)
+        return send_file(self.path, mimetype=self.mime_type)
     
     def toJSON(self):
         """Return the JSON represenation of the image."""
         return {"url": {"path": self.server.get_file_content_path(self), "port": self.server.get_port()},
-                "mimetype": self.mime_type, "paths": [self.path] + self.additional_paths,
-                "type": self.__class__.__name__}
+                "mimetype": self.mime_type, "paths": self.paths,
+                "type": self.__class__.__name__, "id": self.get_id(),
+                "name": self.get_storage_file_name()}
     
     def copy_to(self, path):
         """Store at the other location."""
         shutil.copy(self.path, path)
-        self.additional_paths.append(path)
+        self.paths.append(path)
         
+    def __repr__(self):
+        """Return a string representation."""
+        return "<{} at {}>".format(self.__class__.__name__, " and ".join(self.paths))
+
 
 class ConvertCommand:
     """Convert images using the convert command."""
@@ -72,8 +82,8 @@ class Converter(MessageReceiver, LocalBroker):
         super().__init__()
         self.conversion_strategy = ConvertCommand(".jpg", "image/jpeg")
 
-    def receive_new_scan(self, message):
-        scan = message["scan"]
+    def receive_new_scan(self, message_):
+        scan = message_["scan"]
         image = self.conversion_strategy.convert_scan_to_image(scan)
         self.deliver_message(message.new_image(image=image))
     

@@ -174,6 +174,10 @@ class Scan:
     def get_scanner(self):
         """Return the scanner."""
         return self.scanner
+        
+    def __repr__(self):
+        """Return a string representation."""
+        return "<{} at {}>".format(self.__class__.__name__, self.image_path)
 
 
 class Scanner(StateMachine):

@@ -88,7 +88,7 @@ class OpenBookScanner:
         """Make the state machine public"""
         updater = ParseUpdater(state_machine, self.update_strategy)
         state_machine.register_state_observer(updater)
-        state_machine.subscribe(self.outgoing_messages)
+        state_machine.subscribe(self.internal_messages)
         state_machine.register_state_observer(StateChangeToMessageReceiveAdapter(self.internal_messages))
         self.relate_to(relation, updater)
         return state_machine

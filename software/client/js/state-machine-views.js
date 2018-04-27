@@ -45,6 +45,18 @@ ScannerListEntry.prototype.update = function (state) {
     }
 };
 
+// Show the storage
+function Storage(state) {
+    console.log("storage", state);
+}
+Storage.prototype.update = function (state) {
+}
 
-const relationsToStateMachineViews = {"status": [Status], "listener": [Status], "scanner": [Status, ScannerListEntry]};
+
+const relationsToStateMachineViews = {
+    "status": [Status],
+    "listener": [Status], 
+    "scanner": [Status, ScannerListEntry],
+    "storage": [Status, Storage]
+};
 

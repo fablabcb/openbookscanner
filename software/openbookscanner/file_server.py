@@ -40,7 +40,7 @@ class FileServer(MessageReceiver):
     def serve_file_content_by_id(self, id):
         """Serve a file by an id."""
         file = self.files.get(id, NoFile())
-        file.flask_send_file()
+        return file.flask_send_file()
     
     def add_file(self, file):
         """Serve a file until noone needs it."""
