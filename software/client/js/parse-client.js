@@ -46,8 +46,15 @@ var fetchAllInterval;
 function initializeParse() {
     fetchAllInterval = window.setInterval(fetchAll, 300);
     Parse.initialize("OpenBookScanner");
-    Parse.serverURL = "http://" + (document.location.hostname || "localhost") + ":1337/parse";
+    Parse.serverURL = getParseServerURL();
     console.log("Parse server URL is " + Parse.serverURL);
+}
+
+function getParseServerURL() {
+    return "http://" + (document.location.hostname || "localhost") + ":1337/parse";
+}
+function getImageURL(image) {
+    return "http://" + (document.location.hostname || "localhost") + ":" + image.url.port + image.url.path;
 }
 
 

@@ -47,7 +47,7 @@ class Image:
         return {"url": {"path": self.server.get_file_content_path(self), "port": self.server.get_port()},
                 "mimetype": self.mime_type, "paths": self.paths,
                 "type": self.__class__.__name__, "id": self.get_id(),
-                "name": self.get_storage_file_name()}
+                "name": self.get_storage_file_name(), "scanner": self.scanner.toJSON()}
     
     def copy_to(self, path):
         """Store at the other location."""

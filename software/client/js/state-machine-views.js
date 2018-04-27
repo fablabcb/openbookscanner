@@ -15,6 +15,8 @@ Status.prototype.update = function (state) {
     console.log("update_status", state);
 };
 
+var scannerEntries = {};
+
 // This is a state machine specially for scanners.
 function ScannerListEntry(state) {
     var root = this.root = document.createElement("div");
@@ -23,6 +25,9 @@ function ScannerListEntry(state) {
     });
     addNamedDivToRoot(this, "name");
     addNamedDivToRoot(this, "device");
+    addNamedDivToRoot(this, "images", ["hidden"]);
+    this.image = document.createElement("img");
+    this.images.appendChild(this.image);
     this.scanButton = new StateButton("can_scan", "Scan!", function() {
         console.log("scan " + state.json.id + "!");
         model.deliverMessage(message("scan", {"to": [state.json.id]}));
@@ -30,6 +35,7 @@ function ScannerListEntry(state) {
     this.root.appendChild(this.scanButton.getHTMLElement());
     var scanners = document.getElementById("scanner-list");
     scanners.appendChild(this.root);
+    scannerEntries[state.json.id] = this;
     this.update(state);
 }
 
@@ -45,11 +51,32 @@ ScannerListEntry.prototype.update = function (state) {
     }
 };
 
+ScannerListEntry.prototype.showImage = function (image) {
+    src = getImageURL(image);
+    this.image.src = src;
+    this.images.classList.remove("hidden");
+}
+
+
 // Show the storage
 function Storage(state) {
     console.log("storage", state);
+    this.update(state);
+    
 }
 Storage.prototype.update = function (state) {
+    var images = state.json.storage.images;
+    var finalImages = {};
+    images.forEach(function(image){
+        finalImages[image.scanner.id] = image;
+    });
+    forAttr(finalImages, function(scannerId){
+        var image = finalImages[scannerId];
+        var scanner = scannerEntries[scannerId];
+        if (scanner) {
+            scanner.showImage(image);
+        }
+    });
 }
 
 
