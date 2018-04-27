@@ -8,9 +8,10 @@ from openbookscanner.message import message
 import time
 from openbookscanner.broker import LocalBroker
 import atexit
+from openbookscanner.message import MessageReceiver
 
 
-class State:
+class State(MessageReceiver):
     """This is the base state for all the states of state machines."""
 
     def enter(self, state_machine):
@@ -21,12 +22,12 @@ class State:
     def on_enter(self):
         """Called when the state is entered."""
         
-    
     def leave(self, state_machine):
+        """The state machine leaves the state."""
         self.on_leave()
     
     def on_leave(self):
-        """Calles when the state is left."""
+        """Called when the state is left."""
     
     def transition_into(self, new_state):
         """Use this to transition into another state."""
@@ -53,22 +54,6 @@ class State:
                 state.wait()
         """
         return False
-
-    def receive_message(self, message):
-        """Receive a message and handle it.
-        
-        The message has a "name" key.
-        If the state defines a method named "receive_" + the name, 
-        this method handles the message.
-        Otherwise, receive_unknown_message handles the message.
-        """
-        message_name = message["name"]
-        method_name = "receive_" + message_name
-        method = getattr(self, method_name, self.receive_unknown_message)
-        method(message)
-
-    def receive_unknown_message(self, message):
-        """The state reacts to all messages which are not explicitely handeled."""
     
     def is_waiting_for_a_message_to_transition_to_the_next_state(self):
         """Return whether the transition to a next state is determined but deferred."""

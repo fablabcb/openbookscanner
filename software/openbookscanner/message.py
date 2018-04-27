@@ -3,6 +3,26 @@ This module contains a way to create new messages and document the accordingly.
 
 """
 
+class MessageReceiver:
+    """Dispatch messages to methods."""
+
+    def receive_message(self, message):
+        """Receive a message and handle it.
+        
+        The message has a "name" key.
+        If the state defines a method named "receive_" + the name, 
+        this method handles the message.
+        Otherwise, receive_unknown_message handles the message.
+        """
+        message_name = message["name"]
+        method_name = "receive_" + message_name
+        method = getattr(self, method_name, self.receive_unknown_message)
+        method(message)
+
+    def receive_unknown_message(self, message):
+        """The state reacts to all messages which are not explicitely handeled."""
+
+
 
 class MessageCreator:
     """A simple way to create new messages.
@@ -43,4 +63,6 @@ message.new_book_scanner_server.describe_as("""This message announces a new book
 
 This is a debug message which allows you to see if you fetched the right book scanner.
 """)
+message.new_scan.describe_as("""A scanner made a new scan. This is the output image.""")
+message.new_image.describe_as("""A new image was created.""")
 
