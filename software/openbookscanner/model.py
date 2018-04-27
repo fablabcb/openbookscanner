@@ -6,6 +6,7 @@ from .states.state import StateChangeToMessageReceiveAdapter
 from .states.scanner import ScannerListener
 from parse_rest.datatypes import Object
 from .message import message
+#from .images import UploadingImagesObserver
 
 import time
 
@@ -55,8 +56,17 @@ class OpenBookScanner:
         """Add new hardware to myself."""
         print("model -> new hardware", hardware)
         if hardware.is_scanner():
-            self.public_state_machine("scanner", hardware)
-            self.incoming_messages.subscribe(hardware)
+            self.new_scanner_detected(hardware)
+        else:
+            raise ValueError("Could not use the hardware {}.".format(hardware))
+        # self.model.save() # ERROR!!
+
+    def new_scanner_detected(self, scanner):
+        """A new scanner has been detected."""
+        self.public_state_machine("scanner", scanner)
+        self.incoming_messages.subscribe(scanner)
+#        scanner.notify_about_new_image(UploadingImagesObserver(self.update_strategy))
+
 
     def public_state_machine(self, relation, state_machine):
         """Make the state machine public"""
