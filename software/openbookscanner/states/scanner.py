@@ -190,7 +190,6 @@ class Scanner(StateMachine):
         self.producer = producer
         self.id = self.device
         self.listener = listener
-        self.new_image_observers = []
         
     def is_scanner(self):
         """This is a scanner."""
@@ -211,9 +210,8 @@ class Scanner(StateMachine):
     def toJSON(self):
         """Return a JSON representation of the object."""
         json = super().toJSON()
-        is_scanner_state = isinstance(self.state, ScannerStateMixin)
-        json["can_scan"] = is_scanner_state and self.state.can_scan()
-        json["is_plugged_in"] = is_scanner_state and self.state.is_plugged_in()
+        json["can_scan"] = getattr(self.state, can_scan, lambda: False)()
+        json["is_plugged_in"] = getattr(self.state, is_plugged_in, lambda: False)()
         json["number"] = self.number
         json["device"] = self.device
         json["hardware"] = self.type
@@ -226,18 +224,6 @@ class Scanner(StateMachine):
     def check_if_available(self):
         """Check if the scanner is available."""
         return self.device in self.listener.list_currect_device_ids()
-    
-    def new_image_scanned(self, image):
-        """Set the latest image of the scanner and notify the observers."""
-        for observer in self.new_image_observers:
-            observer.new_image_scanned(self.lastest_image)
-    
-    def notify_about_new_image(self, observer):
-        """When a new image is scanned, this observer is notified.
-        
-        observer.new_image_scanned(new_image)
-        """
-        self.new_image_observers.append(observer)
 
 
 class ScannerListener(HardwareListener):
