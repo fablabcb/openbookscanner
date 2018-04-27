@@ -173,8 +173,8 @@ class TestHardwareListener(HardwareListener):
 
     driver_support = False
     
-    timout_for_driver_detection = 0.0001
-    timout_for_hardware_changes = 0.0001
+    timeout_for_driver_detection = 0.0001
+    timeout_for_hardware_changes = 0.0001
     
     def __init__(self):
         super().__init__()
