@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 import os
 from parse_rest.datatypes import File
+from openbookscanner.message import message
 
 #
 # Mixins for common state.
@@ -96,25 +97,26 @@ class Scanning(ScannerStateMixin, RunningState):
         if p.returncode != 0:
             self.transition_into(UnableToScan(p.stderr.decode()))
             return
-        jpg_image = os.path.join(directory.name, "scan.jpg")
-        command = ["convert", scan_image, jpg_image]
-        p = subprocess.run(command, stderr=subprocess.PIPE)
-        if p.returncode != 0:
-            self.transition_into(UnableToConvertScannedImage(p.stderr.decode()))
-            return
-        image = ScannedImage(jpg_image, directory, self.scanner)
-        self.transition_into(WaitingToBeAvailableAgain(image))
+#        jpg_image = os.path.join(directory.name, "scan.jpg")
+#        command = ["convert", scan_image, jpg_image]
+#        p = subprocess.run(command, stderr=subprocess.PIPE)
+#        if p.returncode != 0:
+#            self.transition_into(UnableToConvertScannedImage(p.stderr.decode()))
+#            return
+#        image = ScannedImage(jpg_image, directory, self.scanner)
+        scan = Scan(scan_image, directory, self.scanner)
+        self.transition_into(WaitingToBeAvailableAgain(scan))
 
 
 class WaitingToBeAvailableAgain(ScannerStateMixin, TimingOut):
     """The scanner cannot be accessed shortly after scanning."""
     
-    def __init__(self, image):
+    def __init__(self, scan):
         """Remember the image."""
-        self.image = image
+        self.scan = scan
     
     def on_enter(self):
-        self.scanner.new_image_scanned(self.image)
+        self.deliver_message(message.new_scan(scan=self.scan))
     
     def state_when_the_timeout_was_reached(self):
         """The scanner seems to be unplugged."""
@@ -145,12 +147,12 @@ class UnableToScan(AddDescriptionMixin, AbleToScan):
         return True
 
 
-class UnableToConvertScannedImage(AddDescriptionMixin, AbleToScan):
-    """Could not convert the image."""
-    
-    def is_error(self):
-        """This is an error state."""
-        return True
+#class UnableToConvertScannedImage(AddDescriptionMixin, AbleToScan):
+#    """Could not convert the image."""
+#    
+#    def is_error(self):
+#        """This is an error state."""
+#        return True
 
 
 #
@@ -158,19 +160,22 @@ class UnableToConvertScannedImage(AddDescriptionMixin, AbleToScan):
 #
 
 
-class ScannedImage:
-    """This is the image of a scanner."""
+class Scan:
+    """This is the image produced by a scanner."""
     
     def __init__(self, image_path, reference, scanner):
         """Create a new image."""
         self.image_path = image_path
-        self.references = []
+        self.reference = reference
         self.scanner = scanner
-        print("new Scanned Image at", self.image_path)
-        
-    def add_reference(self, reference):
-        """Add a reference to an object which should be held until this onject vanisches."""
-        self.references.append(reference)
+    
+    def get_path(self):
+        """Return the path to the scan result."""
+        return self.image_path
+    
+    def get_scanner(self):
+        """Return the scanner."""
+        return self.scanner
 
 
 class Scanner(StateMachine):
