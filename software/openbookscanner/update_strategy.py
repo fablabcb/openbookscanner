@@ -79,7 +79,7 @@ class BatchStrategy(OnChangeStrategy):
                 # http://docs.parseplatform.org/rest/guide/#batch-operations
                 batch, callbacks = zip(*self._batch[:50])
                 self._batch = self._batch[50:]
-                batcher.batch(batch)
+                batcher.batch(list(batch))
                 for callback in callbacks:
                     callback()
      
