@@ -4,11 +4,15 @@ This module controls the scanners.
 """
 
 from .hardware_listener import HardwareListener
-from .state import StateMachine, RunningState, FinalState, State, TransitionOnReceivedMessage, PollingState
+from .state import StateMachine, RunningState, FinalState, State, TransitionOnReceivedMessage, PollingState, TimingOut
 import subprocess
 import tempfile
 import os
+from parse_rest.datatypes import File
 
+#
+# Mixins for common state.
+#
 
 class ScannerStateMixin:
     """Shortcut methods for scanner states."""
@@ -25,9 +29,41 @@ class ScannerStateMixin:
     def is_plugged_in(self):
         """Whether the scanner is plugged in"""
         return True
+    
+    def has_an_image(self):
+        """If this is True, you can get the image path from self.get_image_path()"""
+        return False
+
+    def toJSON(self):
+        """Add some attributes to know better what is going on."""
+        json = super().toJSON()
+        json["has_an_image"] = self.has_an_image()
+        json["can_scan"] = self.can_scan()
+        json["is_plugged_in"] = self.is_plugged_in()
+        if self.has_an_image():
+            json["image_path"] = self.get_image_path()
+        return json
 
 
-class WithoutAScannedImage(State, ScannerStateMixin):
+class AddDescriptionMixin:
+    """Add the description of the first argument to json."""
+
+    def __init__(self, description=""):
+        super().__init__()
+        self.description = self.__class__.__doc__ + "\n\n" + description
+    
+    def toJSON(self):
+        json = super().toJSON()
+        json["description"] = self.description
+        return json
+
+
+#
+# States for the state machine
+#
+
+
+class AbleToScan(ScannerStateMixin, State):
     """The scanner just got attached. There is no image to show."""
     
     timeout = 3
@@ -37,7 +73,7 @@ class WithoutAScannedImage(State, ScannerStateMixin):
         self.transition_into(Scanning())
         
     def receive_update(self, message):
-        if self.scanner.device not in self.scanner.listener.list_currect_device_ids():
+        if not self.scanner.check_if_available():
             self.transition_into(Unplugged("The scanner could not be found in the scanner listing."))
             return
 
@@ -46,7 +82,7 @@ class WithoutAScannedImage(State, ScannerStateMixin):
         return True
 
 
-class Scanning(RunningState, ScannerStateMixin):
+class Scanning(ScannerStateMixin, RunningState):
     """The scanner is currently scanning an image."""
     
     def run(self):
@@ -66,23 +102,34 @@ class Scanning(RunningState, ScannerStateMixin):
         if p.returncode != 0:
             self.transition_into(UnableToConvertScannedImage(p.stderr.decode()))
             return
-        self.transition_into(HoldingAScannedImage(jpg_image, directory))
+        image = ScannedImage(jpg_image, directory, self.scanner)
+        self.transition_into(WaitingToBeAvailableAgain(image))
 
-    
-class AddDescriptionMixin:
-    """Add the description of the first argument to json."""
 
-    def __init__(self, description):
-        super().__init__()
-        self.description = self.__class__.__doc__ + "\n\n" + description
+class WaitingToBeAvailableAgain(ScannerStateMixin, TimingOut):
+    """The scanner cannot be accessed shortly after scanning."""
     
-    def toJSON(self):
-        json = super().toJSON()
-        json["description"] = self.description
-        return json
+    def __init__(self, image):
+        """Remember the image."""
+        self.image = image
+    
+    def on_enter(self):
+        self.scanner.new_image_scanned(self.image)
+    
+    def state_when_the_timeout_was_reached(self):
+        """The scanner seems to be unplugged."""
+        return Unplugged("The scanner could not be listed again after the scan.")
+        
+    timeout_seconds = 10
+    numer_of_checks_in_timeout = 50
 
-    
-class Unplugged(AddDescriptionMixin, FinalState, ScannerStateMixin):
+    def check(self):
+        """Check if the scanner turns up again."""
+        if self.scanner.check_if_available():
+            self.transition_into(AbleToScan())
+
+
+class Unplugged(ScannerStateMixin, AddDescriptionMixin, FinalState):
     """The scanner can not be used because it was unplugged from the computer."""
 
     def is_plugged_in(self):
@@ -90,11 +137,15 @@ class Unplugged(AddDescriptionMixin, FinalState, ScannerStateMixin):
         return False
 
 
-class UnableToScan(AddDescriptionMixin, WithoutAScannedImage):
+class UnableToScan(AddDescriptionMixin, AbleToScan):
     """The scanner could not scan the image because an error occurred."""
 
+    def is_error(self):
+        """This is an error state."""
+        return True
 
-class UnableToConvertScannedImage(AddDescriptionMixin, WithoutAScannedImage):
+
+class UnableToConvertScannedImage(AddDescriptionMixin, AbleToScan):
     """Could not convert the image."""
     
     def is_error(self):
@@ -102,12 +153,24 @@ class UnableToConvertScannedImage(AddDescriptionMixin, WithoutAScannedImage):
         return True
 
 
-class HoldingAScannedImage(WithoutAScannedImage):
-    """The scanner has an image."""
+#
+# State machine
+#
+
+
+class ScannedImage:
+    """This is the image of a scanner."""
     
-    def __init__(self, image, reference):
-        self.image = image
-        self.reference = reference
+    def __init__(self, image_path, reference, scanner):
+        """Create a new image."""
+        self.image_path = image_path
+        self.references = []
+        self.scanner = scanner
+        print("new Scanned Image at", self.image_path)
+        
+    def add_reference(self, reference):
+        """Add a reference to an object which should be held until this onject vanisches."""
+        self.references.append(reference)
 
 
 class Scanner(StateMachine):
@@ -115,7 +178,7 @@ class Scanner(StateMachine):
     
     def first_state(self):
         """Wait for a message to arrive so we can create scanners with no cost."""
-        return TransitionOnReceivedMessage(WithoutAScannedImage())
+        return TransitionOnReceivedMessage(AbleToScan())
     
     def __init__(self, listener, number, device, type, model, producer):
         """Create a fixed image scanner."""
@@ -127,6 +190,7 @@ class Scanner(StateMachine):
         self.producer = producer
         self.id = self.device
         self.listener = listener
+        self.new_image_observers = []
         
     def is_scanner(self):
         """This is a scanner."""
@@ -145,10 +209,11 @@ class Scanner(StateMachine):
         return "<{} with id {}>".format(self.__class__.__name__, self.id)
     
     def toJSON(self):
+        """Return a JSON representation of the object."""
         json = super().toJSON()
-        if isinstance(self.state, ScannerStateMixin):
-            json["can_scan"] = self.state.can_scan()
-            json["is_plugged_in"] = self.state.is_plugged_in()
+        is_scanner_state = isinstance(self.state, ScannerStateMixin)
+        json["can_scan"] = is_scanner_state and self.state.can_scan()
+        json["is_plugged_in"] = is_scanner_state and self.state.is_plugged_in()
         json["number"] = self.number
         json["device"] = self.device
         json["hardware"] = self.type
@@ -157,6 +222,22 @@ class Scanner(StateMachine):
         json["id"] = self.id
         json["name"] = "{} № {}".format(self.type, self.number)
         return json
+        
+    def check_if_available(self):
+        """Check if the scanner is available."""
+        return self.device in self.listener.list_currect_device_ids()
+    
+    def new_image_scanned(self, image):
+        """Set the latest image of the scanner and notify the observers."""
+        for observer in self.new_image_observers:
+            observer.new_image_scanned(self.lastest_image)
+    
+    def notify_about_new_image(self, observer):
+        """When a new image is scanned, this observer is notified.
+        
+        observer.new_image_scanned(new_image)
+        """
+        self.new_image_observers.append(observer)
 
 
 class ScannerListener(HardwareListener):
@@ -171,8 +252,8 @@ class ScannerListener(HardwareListener):
 
     """
     
-    timout_for_hardware_changes = 3
-    timout_for_driver_detection = 10
+    timeout_for_hardware_changes = 3
+    timeout_for_driver_detection = 10
     
     def __init__(self):
         super().__init__()
@@ -202,7 +283,7 @@ class ScannerListener(HardwareListener):
                 self.found_new_hardware(scanner)
                 scanner.update()
         self.device_list = self.new_device_list
-        print("scanner list", self.list_currect_device_ids())
+#        print("scanner list", self.list_currect_device_ids())
         
             
       
