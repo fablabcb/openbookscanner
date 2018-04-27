@@ -21,7 +21,7 @@ class DetectingDriverSupport(PollingState, Checks):
     @property
     def timeout(self):
         """How long to wait between detections."""
-        return self.state_machine.timout_for_driver_detection
+        return self.state_machine.timeout_for_driver_detection
 
     def poll(self):
         """Detect if the hardware is supported."""
@@ -60,7 +60,7 @@ class ListeningForHardwareChanges(PollingState, Checks):
     @property
     def timeout(self):
         """How long to wait between hardware changes."""
-        return self.state_machine.timout_for_hardware_changes
+        return self.state_machine.timeout_for_hardware_changes
     
     def poll(self):
         """Listen for new hardware."""
@@ -94,8 +94,8 @@ class HardwareListener(StateMachine):
     """
     
     first_state = DetectingDriverSupport
-    timout_for_driver_detection = 1
-    timout_for_hardware_changes = 0.5
+    timeout_for_driver_detection = 1
+    timeout_for_hardware_changes = 0.5
     
     driver_message = "The necessary drivers need to be installed."
     
