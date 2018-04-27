@@ -7,9 +7,11 @@ from .hardware_listener import HardwareListener
 from .state import StateMachine, RunningState, FinalState, State, TransitionOnReceivedMessage, PollingState
 import subprocess
 import tempfile
+import os
+
 
 class ScannerStateMixin:
-    """Shorcut methods for scanner states."""
+    """Shortcut methods for scanner states."""
 
     @property
     def scanner(self):
@@ -36,7 +38,7 @@ class WithoutAScannedImage(State, ScannerStateMixin):
         
     def receive_update(self, message):
         if self.scanner.device not in self.scanner.listener.list_currect_device_ids():
-            self.transition_into(Unplugged("Scanner unplugged."))
+            self.transition_into(Unplugged("The scanner could not be found in the scanner listing."))
             return
 
     def can_scan(self):
@@ -56,7 +58,7 @@ class Scanning(RunningState, ScannerStateMixin):
         with open(scan_image, "wb") as stdout:
             p = subprocess.run(command, stdout=stdout, stderr=subprocess.PIPE)
         if p.returncode != 0:
-            self.transition_into(Unplugged(p.stderr.decode()))
+            self.transition_into(UnableToScan(p.stderr.decode()))
             return
         jpg_image = os.path.join(directory.name, "scan.jpg")
         command = ["convert", scan_image, jpg_image]
@@ -71,6 +73,7 @@ class AddDescriptionMixin:
     """Add the description of the first argument to json."""
 
     def __init__(self, description):
+        super().__init__()
         self.description = self.__class__.__doc__ + "\n\n" + description
     
     def toJSON(self):
@@ -79,7 +82,7 @@ class AddDescriptionMixin:
         return json
 
     
-class Unplugged(FinalState, ScannerStateMixin, AddDescriptionMixin):
+class Unplugged(AddDescriptionMixin, FinalState, ScannerStateMixin):
     """The scanner can not be used because it was unplugged from the computer."""
 
     def is_plugged_in(self):
@@ -87,7 +90,11 @@ class Unplugged(FinalState, ScannerStateMixin, AddDescriptionMixin):
         return False
 
 
-class UnableToConvertScannedImage(WithoutAScannedImage, AddDescriptionMixin):
+class UnableToScan(AddDescriptionMixin, WithoutAScannedImage):
+    """The scanner could not scan the image because an error occurred."""
+
+
+class UnableToConvertScannedImage(AddDescriptionMixin, WithoutAScannedImage):
     """Could not convert the image."""
     
     def is_error(self):
@@ -195,6 +202,7 @@ class ScannerListener(HardwareListener):
                 self.found_new_hardware(scanner)
                 scanner.update()
         self.device_list = self.new_device_list
+        print("scanner list", self.list_currect_device_ids())
         
             
       

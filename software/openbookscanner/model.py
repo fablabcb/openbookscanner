@@ -1,4 +1,4 @@
-from .broker import ParseBroker, MessagePrintingSubscriber, ParsePublisher, BufferingBroker, ParseSubscriber
+from .broker import ParseBroker, MessagePrintingSubscriber, ParsePublisher, BufferingBroker, ParseSubscriber, LocalBroker
 from .parse_update import ParseUpdater
 from .update_strategy import BatchStrategy
 from .states.status import StatusStateMachine
@@ -35,6 +35,7 @@ class OpenBookScanner:
         self.outgoing_messages = BufferingBroker()
         self.outgoing_messages_publisher = ParsePublisher(self.public_channel_name_outgoing, self.update_strategy)
         self.incoming_messages = ParseSubscriber(self.public_channel_name_incoming)
+        self.internal_messages = LocalBroker()
 
     def create_model(self):
         """This creates the model which is observable by the client."""
@@ -52,7 +53,7 @@ class OpenBookScanner:
         
     def new_hardware_detected(self, hardware):
         """Add new hardware to myself."""
-        print("new hardware", hardware)
+        print("model -> new hardware", hardware)
         if hardware.is_scanner():
             self.public_state_machine("scanner", hardware)
             self.incoming_messages.subscribe(hardware)
@@ -62,7 +63,7 @@ class OpenBookScanner:
         updater = ParseUpdater(state_machine, self.update_strategy)
         state_machine.register_state_observer(updater)
         state_machine.subscribe(self.outgoing_messages)
-        state_machine.register_state_observer(StateChangeToMessageReceiveAdapter(self.outgoing_messages))
+        state_machine.register_state_observer(StateChangeToMessageReceiveAdapter(self.internal_messages))
         self.model.relation(relation).add([updater.get_parse_object()])
         return state_machine
 
@@ -87,6 +88,7 @@ class OpenBookScanner:
     def print_messages(self):
         """Attach a receiver to the message broker to print them."""
         self.outgoing_messages.subscribe(MessagePrintingSubscriber(self.public_channel_name_outgoing))
+        self.internal_messages.subscribe(MessagePrintingSubscriber("Internal"))
         self.incoming_messages.subscribe(MessagePrintingSubscriber(self.public_channel_name_incoming))
 
 

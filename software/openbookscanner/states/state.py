@@ -295,6 +295,7 @@ class PollingState(RunningState):
         
         If the Python program stops, a SystemExit error is raised.
         """
+        self.start_polling()
         while not self.is_waiting_for_a_message_to_transition_to_the_next_state():
             self.poll()
             if not self.is_waiting_for_a_message_to_transition_to_the_next_state():
@@ -307,6 +308,9 @@ class PollingState(RunningState):
         
         When you use self.transition_into(new_state), this will not be called any more.
         """
+        
+    def start_polling(self):
+        """This is called once before self.poll() is called."""
 
 
 class TransitionOnReceivedMessage(State):
@@ -364,3 +368,64 @@ class PrintStateChanges:
     def state_changed(self, state_machine):
         """Print the state change."""
         print("new state:", state_machine)
+
+
+class TimedOut(State):
+    """This is teh state when the timeout was reached."""
+
+
+class TimingOut(PollingState):
+    """After the given time, this state transitions into another state.
+    
+    - timout_seconds is the number of seconds wait until time out.
+    - numer_of_checks_in_timeout determined how often at maximum check()
+      is to be called before the timeout is reached.
+      """
+    
+    timeout_seconds = 5
+    numer_of_checks_in_timeout = 10
+    
+    state_when_the_timeout_was_reached = TimedOut
+
+    def start_checking(self):
+        """This is called once before any check()."""
+
+    def check(self):
+        """Return whether to abort the timeout and transition into the next state.
+        
+        
+        By default, this does nothing so that the state machine transitions
+        into the state_when_the_timeout_was_reached.
+        
+        If this calls self.transition_into(new_state), the timeout state is left.
+        """
+    
+    @property
+    def timeout(self):
+        """Provide the right timeout to the PollingState."""
+        return self.timeout_seconds / self.numer_of_checks_in_timeout
+        
+    def start_polling(self):
+        """Remember the time when polling started."""
+        self.start_time = time.time()
+        self.start_checking()
+    
+    @property
+    def seconds_remaining(self):
+        """Return the seconds remainning until the time out.
+        
+        If the is 0, the timeout occurred.
+        """
+        seconds_remaning = self.start_time + self.timeout_seconds - time.time()
+        return (seconds_remaning if seconds_remaning > 0 else 0)
+        
+    def poll(self):
+        """Check if the timeout has passed."""
+        self.check()
+        if self.is_waiting_for_a_message_to_transition_to_the_next_state():
+            return # we transitioned into another state
+        if self.seconds_remaining:
+            self.transition_into(self.state_when_the_timeout_was_reached())
+        
+        
+        
