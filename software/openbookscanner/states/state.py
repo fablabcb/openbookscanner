@@ -288,7 +288,7 @@ class RunningState(State):
 class PollingState(RunningState):
     """This state runs the poll function all "timeout" seconds and stops on transition."""
     
-    timeout = 0.001
+    timeout = 0.001 # TODO: refector to seconds_between_polls
 
     def run(self):
         """Call self.poll() on a regular basis, waiting self.timeout in between.
@@ -377,7 +377,7 @@ class TimedOut(State):
 class TimingOut(PollingState):
     """After the given time, this state transitions into another state.
     
-    - timout_seconds is the number of seconds wait until time out.
+    - timeout_seconds is the number of seconds wait until time out.
     - numer_of_checks_in_timeout determined how often at maximum check()
       is to be called before the timeout is reached.
       """
@@ -398,12 +398,13 @@ class TimingOut(PollingState):
         into the state_when_the_timeout_was_reached.
         
         If this calls self.transition_into(new_state), the timeout state is left.
+        Note that check() is called shortly before a timeout can occur.
         """
     
     @property
     def timeout(self):
         """Provide the right timeout to the PollingState."""
-        return self.timeout_seconds / self.numer_of_checks_in_timeout
+        return float(self.timeout_seconds) / self.numer_of_checks_in_timeout
         
     def start_polling(self):
         """Remember the time when polling started."""
@@ -424,7 +425,7 @@ class TimingOut(PollingState):
         self.check()
         if self.is_waiting_for_a_message_to_transition_to_the_next_state():
             return # we transitioned into another state
-        if self.seconds_remaining:
+        if not self.seconds_remaining:
             self.transition_into(self.state_when_the_timeout_was_reached())
         
         
