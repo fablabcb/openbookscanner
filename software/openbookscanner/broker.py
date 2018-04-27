@@ -90,7 +90,7 @@ class ParseSubscriber:
         """Receive the messages."""
         message_holder = self._get_message_holder()
         messages = list(message_holder.messages)
-        message_holder.removeFromArray("messages", messages)
+        self.update_strategy.removeFromArray(message_holder, "messages", messages)
         for message in messages:
             for subscriber in self.subscribers:
                 subscriber.receive_message(json.loads(message))
@@ -116,8 +116,7 @@ class ParsePublisher:
         message = json.dumps(message)
         for subscriber in self.message_holder_class.Query.all():
 #            print("deliver", message, "to", subscriber)
-            subscriber.addToArray("messages", [message])
-#            self.update_strategy.save(subscriber)
+            self.update_strategy.addToArray(subscriber, "messages", [message])
     
     def receive_message(self, message):
         """When a publisher receives the message, it delivers it."""
