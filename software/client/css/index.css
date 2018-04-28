@@ -38,7 +38,7 @@ footer a {
     display: none;
 }
 
-.statusListElement.final {
+.status-list-element.final {
     color: #888888;
 }
 
