@@ -7,35 +7,38 @@
 // This is the status state machine.
 function Status(state) {
     this.statusElement = new StatusListElement(state.json);
-    console.log("create_status", state);
+    console.log("create Status of", state.json.type, state);
 }
 
 Status.prototype.update = function (state) {
     this.statusElement.updateModel(state.json);
-    console.log("update_status", state);
+    console.log("update Status", state.json.type, state);
 };
 
-var scannerEntries = {};
+var scannerIdToScannerEntry = {};
+var scannerIdToLastScannedImage = {};
 
 // This is a state machine specially for scanners.
 function ScannerListEntry(state) {
+    this.id = state.json.id;
+    var me = this;
     var root = this.root = document.createElement("div");
     ["scanner", "s-grid-full", "m-grid-half", "l-grid-third", "padded", "bordered"].forEach(function(e){
         root.classList.add(e);
     });
     addNamedDivToRoot(this, "name");
     addNamedDivToRoot(this, "device");
-    addNamedDivToRoot(this, "images", ["hidden"]);
+    addNamedDivToRoot(this, "images");
     this.image = document.createElement("img");
     this.images.appendChild(this.image);
     this.scanButton = new StateButton("can_scan", "Scan!", function() {
-        console.log("scan " + state.json.id + "!");
-        model.deliverMessage(message("scan", {"to": [state.json.id]}));
+        console.log("Scan " + me.id + "!");
+        model.deliverMessage(message("scan", {"to": [me.id]}));
     });
     this.root.appendChild(this.scanButton.getHTMLElement());
     var scanners = document.getElementById("scanner-list");
     scanners.appendChild(this.root);
-    scannerEntries[state.json.id] = this;
+    scannerIdToScannerEntry[this.id] = this;
     this.update(state);
 }
 
@@ -49,33 +52,30 @@ ScannerListEntry.prototype.update = function (state) {
     } else {
         this.root.classList.add("hidden");
     }
+    this.updateImage();
 };
 
-ScannerListEntry.prototype.showImage = function (image) {
-    src = getImageURL(image);
-    this.image.src = src;
-    this.images.classList.remove("hidden");
+ScannerListEntry.prototype.updateImage = function() {
+    var image = scannerIdToLastScannedImage[this.id];
+    if (image) {
+        src = getImageURL(image);
+        this.image.src = src;
+    }
 }
 
 
 // Show the storage
 function Storage(state) {
-    console.log("storage", state);
     this.update(state);
     
 }
 Storage.prototype.update = function (state) {
     var images = state.json.storage.images;
-    var finalImages = {};
     images.forEach(function(image){
-        finalImages[image.scanner.id] = image;
+        scannerIdToLastScannedImage[image.scanner.id] = image;
     });
-    forAttr(finalImages, function(scannerId){
-        var image = finalImages[scannerId];
-        var scanner = scannerEntries[scannerId];
-        if (scanner) {
-            scanner.showImage(image);
-        }
+    forAttr(scannerIdToScannerEntry, function(scannerId, scanner){
+        scanner.updateImage();
     });
 }
 
