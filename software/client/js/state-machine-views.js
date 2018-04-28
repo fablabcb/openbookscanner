@@ -12,7 +12,7 @@ function Status(state) {
 
 Status.prototype.update = function (state) {
     this.statusElement.updateModel(state.json);
-    console.log("update Status", state.json.type, state);
+    console.log("update Status of", state.json.type, state);
 };
 
 var scannerIdToScannerEntry = {};
@@ -68,16 +68,27 @@ ScannerListEntry.prototype.updateImage = function() {
 function Storage(state) {
     this.update(state);
     
-}
+};
+
 Storage.prototype.update = function (state) {
     var images = state.json.storage.images;
+    this.updateScannerImages(images);
+    this.updateImageListing(images);
+};
+Storage.prototype.updateImageListing = function(images) {
+    var listing = document.getElementById("images-list");
+    
+
+};
+
+Storage.prototype.updateScannerImages = function(images) {
     images.forEach(function(image){
         scannerIdToLastScannedImage[image.scanner.id] = image;
     });
     forAttr(scannerIdToScannerEntry, function(scannerId, scanner){
         scanner.updateImage();
     });
-}
+};
 
 
 const relationsToStateMachineViews = {

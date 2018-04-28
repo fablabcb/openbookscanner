@@ -37,7 +37,7 @@ Model.prototype.retrieveModel = function() {
                     me.modelUpdated();
                 });
             } catch (e) {
-                console.log(e);
+                console.log("Error:", e);
                 throw e;
             }
         }
@@ -91,7 +91,7 @@ Model.prototype.updateModelRelation = function(relationName) {
                     }
                 });
             } catch (e) {
-                console.log(e);
+                console.log("Error:", e);
                 throw e;
             }
         }

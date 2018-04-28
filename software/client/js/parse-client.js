@@ -142,7 +142,7 @@ ParsePublisher.prototype.deliverMessage = function(message) {
                     subscriber.save();
                 });
             } catch (e) {
-                console.log(e);
+                console.log("ERROR:", e);
                 throw e;
             }
         }

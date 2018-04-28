@@ -41,3 +41,16 @@ footer a {
 .statusListElement.final {
     color: #888888;
 }
+
+.heading {
+    font-size: 2em;
+    text-align: center;
+    border-top: 2px;
+    border-top-style: solid;
+}
+
+a .heading {
+    text-decoration: none;
+    color: black;
+    border-color: black;
+}
