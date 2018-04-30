@@ -23,32 +23,6 @@ class MessageDispatcher:
         """The state reacts to all messages which are not explicitely handeled."""
 
 
-def to_arduino(message):
-    """Convert a message to the form that the arduino can use it.
-    
-    The message is a whole line ending with "\\r\\n".
-    The name of the message is the content.
-    """
-    return message["name"] + "\r\n"
-
-def from_arduino(string):
-    """Get a message from the arduino.
-    
-    Messages starting with a "[" should have a "]" in it.
-    These are log messages.
-    All other messages expect a name of the message as the body.
-    """
-    string = string.strip()
-    if string[0] == "[":
-        print("string", repr(string))
-        end_of_level = string.index("]")
-        level = string[1:end_of_level]
-        text = string[end_of_level + 1:].strip()
-        return message.log(level=level, text=text)
-    name = string
-    return message(name)
-
-
 class MessageCreator:
     """A simple way to create new messages.
     

@@ -1,31 +1,32 @@
-"""Test the message conversion for the arduino.
+"""Test the message conversion for the serial.
 
 This converts the messages from and to the dictionary form.
 """
 
-from openbookscanner.message import to_arduino, from_arduino, message, ArduinoMessageAdapter
+from openbookscanner.serial import message_to_serial, message_from_serial, SerialMessageAdapter
+from openbookscanner.message import message
 from pytest import mark, fixture
 from unittest.mock import Mock, call
 
 
-class TestMessagesToTheArduino:
+class TestMessagesToTheserial:
     
     @mark.parametrize("message,expected_result", [
         (message.test(), "test\r\n"),
         (message.asdhsakhdahskdhas(asd="assda"), "asdhsakhdahskdhas\r\n")
     ])
     def test_message_with_only_name(self, message, expected_result):
-        result = to_arduino(message)
+        result = message_to_serial(message)
         assert result == expected_result
 
-class TestMessagesFromTheArduino:
+class TestMessagesFromTheserial:
 
     @mark.parametrize("expected_result,message", [
         (message.test(), "test\r\n"),
         (message.asdhsakhdahskdhas(), "asdhsakhdahskdhas\r\n")
     ])
     def test_message_with_only_name(self, message, expected_result):
-        result = from_arduino(message)
+        result = message_from_serial(message)
         assert result == expected_result
 
     @mark.parametrize("expected_result,message", [
@@ -33,7 +34,7 @@ class TestMessagesFromTheArduino:
         (message.log(level="error", text="Oh No!"), "[error] Oh No!\r\n")
     ])
     def test_handle_log_messages(self, message, expected_result):
-        result = from_arduino(message)
+        result = message_from_serial(message)
         assert result == expected_result
 
 
@@ -45,7 +46,7 @@ class TestMessageAdapter:
         
     @fixture
     def adapter(self, serial):
-        return ArduinoMessageAdapter(serial)
+        return SerialMessageAdapter(serial)
         
     @fixture
     def subscriber(self, adapter):
