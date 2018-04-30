@@ -77,7 +77,11 @@ class TestMessageAdapter:
         serial.readline.assert_called_once()
         mock.assert_called_once_with(message)
         
-        
+    def test_no_message_to_deliver(self, adapter, serial, mock):
+        serial.in_waiting = 0
+        adapter.deliver_message = mock
+        adapter.flush()
+    
         
         
         
