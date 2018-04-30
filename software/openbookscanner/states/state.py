@@ -8,10 +8,10 @@ from openbookscanner.message import message
 import time
 from openbookscanner.broker import LocalBroker
 import atexit
-from openbookscanner.message import MessageReceiver
+from openbookscanner.message import MessageDispatcher
 
 
-class State(MessageReceiver):
+class State(MessageDispatcher):
     """This is the base state for all the states of state machines."""
 
     def enter(self, state_machine):

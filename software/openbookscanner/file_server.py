@@ -1,5 +1,5 @@
 """Serve the files over the web server."""
-from .message import MessageReceiver
+from .message import MessageDispatcher
 from flask import Flask, abort
 from weakref import WeakValueDictionary
 import threading
@@ -25,7 +25,7 @@ class NoFile:
         abort(404)
 
 
-class FileServer(MessageReceiver):
+class FileServer(MessageDispatcher):
     """Serve files via an http server."""
     
     FILE_CONTENT = "/file/"

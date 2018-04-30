@@ -1,7 +1,7 @@
 """This module deals with the conversion of images to certain formats.
 
 """
-from .message import MessageReceiver, message
+from .message import MessageDispatcher, message
 from openbookscanner.broker import LocalBroker
 import tempfile
 from .file_server import NullFileServer
@@ -75,7 +75,7 @@ class ConvertCommand:
         return Image(scan.get_scanner(), jpg_image, self.mime_type, directory)
 
 
-class Converter(MessageReceiver, LocalBroker):
+class Converter(MessageDispatcher, LocalBroker):
     """Convert images in different ways."""
     
     def __init__(self):

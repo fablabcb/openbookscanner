@@ -3,7 +3,7 @@ This module contains a way to create new messages and document the accordingly.
 
 """
 
-class MessageReceiver:
+class MessageDispatcher:
     """Dispatch messages to methods."""
 
     def receive_message(self, message):
@@ -23,31 +23,29 @@ class MessageReceiver:
         """The state reacts to all messages which are not explicitely handeled."""
 
 
-ARDUINO_ENCODING = "ASCII"
-
-def to_arduino(message, encoding=ARDUINO_ENCODING):
+def to_arduino(message):
     """Convert a message to the form that the arduino can use it.
     
     The message is a whole line ending with "\\r\\n".
     The name of the message is the content.
     """
-    return message["name"].encode(encoding) + b"\r\n"
+    return message["name"] + "\r\n"
 
-def from_arduino(byte_sequence, encoding=ARDUINO_ENCODING):
+def from_arduino(string):
     """Get a message from the arduino.
     
     Messages starting with a "[" should have a "]" in it.
     These are log messages.
     All other messages expect a name of the message as the body.
     """
-    string = byte_sequence.strip().decode(encoding)
+    string = string.strip()
     if string[0] == "[":
         print("string", repr(string))
         end_of_level = string.index("]")
         level = string[1:end_of_level]
         text = string[end_of_level + 1:].strip()
         return message.log(level=level, text=text)
-    name = byte_sequence.strip().decode(encoding)
+    name = string
     return message(name)
 
 
