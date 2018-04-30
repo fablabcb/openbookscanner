@@ -23,6 +23,17 @@ class MessageReceiver:
         """The state reacts to all messages which are not explicitely handeled."""
 
 
+ARDUINO_ENCODING = "ASCII"
+
+def to_arduino(message, encoding=ARDUINO_ENCODING):
+    """Convert a message to the form that the arduino can use it."""
+    return message["name"].encode(encoding) + b"\r\n"
+
+def from_arduino(byte_sequence, encoding=ARDUINO_ENCODING):
+    """Get a message from the arduino."""
+    name = byte_sequence.strip().decode(encoding)
+    return message(name)
+
 
 class MessageCreator:
     """A simple way to create new messages.
@@ -47,8 +58,11 @@ class MessageCreator:
         setattr(self, name, create_message)
         return create_message
 
-    def __call__(self, name, data):
-        """Create a message with a specific name."""
+    def __call__(self, name, data={}):
+        """Create a message with a specific name.
+        
+        The data is a dictionary with the content of the message.
+        """
         return getattr(self, name)(**data)
 
 message = MessageCreator()
