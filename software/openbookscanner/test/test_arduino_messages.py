@@ -19,6 +19,7 @@ class TestMessagesToTheserial:
         result = message_to_serial(message)
         assert result == expected_result
 
+
 class TestMessagesFromTheserial:
 
     @mark.parametrize("expected_result,message", [
@@ -62,9 +63,9 @@ class TestMessageAdapter:
     def test_messages_arrive_in_order(self, adapter, serial):
         adapter.receive_message(message.test1())
         adapter.receive_message(message.test2())
-        serial.write.assert_has_calls([call(b"test1\r\n"), call(b"test2")])
+        serial.write.assert_has_calls([call(b"test1\r\n"), call(b"test2\r\n")])
     
-    @mark.parametrize("bytes,message", [
+    @mark.parametrize("message,bytes", [
         (message.test(), b"test\r\n"),
         (message.asdhsakhdahskdhas(), b"asdhsakhdahskdhas\r\n")
     ])

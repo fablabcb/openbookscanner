@@ -62,3 +62,23 @@ class SerialMessageAdapter:
     """A message sending and receiving adapter for the Arduino or any serial connection."""
     
 
+    def __init__(self, serial):
+        """Initialize the adapter with a serial connection.
+        
+        See https://pythonhosted.org/pyserial/pyserial_api.html#serial.Serial
+        """
+        self.serial = serial
+    
+    def flush(self):
+        """Receive the messages from the serial connection."""
+        bytes = self.serial.readline()
+        self.deliver_message(message_from_serial(bytes.decode("ASCII")))
+    
+    def receive_message(self, message):
+        """Send a message to the arduino."""
+        bytes = message_to_serial(message).encode("ASCII")
+        self.serial.write(bytes)
+        
+        
+        
+        
