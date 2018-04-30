@@ -106,7 +106,40 @@ Model.prototype.deliverMessage = function(message) {
 
 window.addEventListener("load", function () {
     model = new Model();
+    scrollToAnchor();
 });
+
+// scroll to the #
+function scrollToAnchor() {
+    if (document.location.hash == "") {
+        return;
+    }
+    // behavioral configuration
+    var secondsWithoutChangeToCancel = 1;
+    var maximumSeconds = 3;
+    var intervalInMilliseconds = 200;
+    
+    // computed values
+    var scollsWithoutChangeToCancel = secondsWithoutChangeToCancel * 1000 / intervalInMilliseconds;
+    var timesScrolledWithoutChange = 0;
+    var intervalId = setInterval(function(){
+        // from https://stackoverflow.com/a/3163635
+        var old_position = window.pageYOffset;
+        window.location.hash = window.location.hash;
+        var new_position = window.pageYOffset;
+        if (new_position == old_position) {
+            timesScrolledWithoutChange += 1;
+        } else {
+            timesScrolledWithoutChange = 0;
+            console.log("Content changed, scrolling to " + document.location.hash + ".");
+        }
+        if (timesScrolledWithoutChange >= scollsWithoutChangeToCancel) {
+            clearInterval(intervalId);
+            console.log("Done scrolling after " + secondsWithoutChangeToCancel + " of no change.");
+        }
+    }, intervalInMilliseconds);
+
+}
 
 
 // This is an image object
