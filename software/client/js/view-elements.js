@@ -1,10 +1,11 @@
 
 
 // This is a button which enables/disables an action based on a given attribute.
-function StateButton(attribute, text, onClick) {
+function StateButton(attribute, text, onClick, classList) {
     this.attribute = attribute;
     this.onClick = onClick;
     this.button = document.createElement("input");
+    this.button.classList.add(...(classList||[]));
     this.button.type = "button";
     this.button.value = text;
     this.button.classList.add("StateButton");

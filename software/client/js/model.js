@@ -108,3 +108,13 @@ window.addEventListener("load", function () {
     model = new Model();
 });
 
+
+// This is an image object
+function Image(imageData) {
+    this.json = imageData;
+    this.url = getImageURL(imageData);
+    this.id = this.json.id;
+    this.name = this.json.name;
+}
+
+

@@ -6,9 +6,9 @@ function StatusListElement(model) {
     ["status-list-element", "s-grid-whole", "m-grid-half", "l-grid-third", "padded", "bordered"].forEach(function(e){
         root.classList.add(e);
     });
-    this.addElement("name", ["centered"]);
-    this.addElement("description");
-    this.addElement("state");
+    this.addElement("name", ["centered", "padded", "element-heading"]);
+    this.addElement("description", ["padded"]);
+    this.addElement("state", ["padded"]);
     this.updateModel(model);
     document.getElementById("status-list").appendChild(this.root);
 }
