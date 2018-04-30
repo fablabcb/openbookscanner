@@ -11,9 +11,10 @@ from parse_rest.datatypes import Object
 import json
 from .update_strategy import OnChangeStrategy
 from pprint import pprint
+from .message import MessageDispatcher
 
 
-class LocalBroker:
+class LocalSubscriber:
     """This is a local broker which just forwards the messages."""
 
     def __init__(self):
@@ -29,6 +30,9 @@ class LocalBroker:
         for subscriber in list(self.subscribers):
             subscriber.receive_message(message)
     
+
+class LocalBroker(LocalSubscriber):
+    """Add receiving messages to the subscriber."""
     def receive_message(self, message):
         """When a broker receives a message, it delivers it."""
         self.deliver_message(message)
@@ -86,7 +90,7 @@ class ParseSubscriber:
         """Subscribe to all messages sent over the broker."""
         self.subscribers.append(subscriber)
 
-    def receive_messages(self):
+    def flush(self):
         """Receive the messages."""
         message_holder = self._get_message_holder()
         messages = list(message_holder.messages)
@@ -94,9 +98,6 @@ class ParseSubscriber:
         for message in messages:
             for subscriber in self.subscribers:
                 subscriber.receive_message(json.loads(message))
-        
-                    
-    flush = receive_messages # TODO: refactor name
 
     def delete(self):
         """Delete the own objects on the parse server."""
@@ -135,9 +136,9 @@ class ParseBroker:
         """Subscribe to the brokers messages."""
         self.subscriber.subscribe(subscriber)
     
-    def receive_messages(self):
+    def flush(self):
         """Receive all messages and forward them to the subscribers."""
-        self.subscriber.receive_messages()
+        self.subscriber.flush()
     
     def deliver_message(self, message):
         """Deliver a message to all brokers in the channel."""

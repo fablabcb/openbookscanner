@@ -2,7 +2,7 @@
 
 """
 from .message import MessageDispatcher, message
-from openbookscanner.broker import LocalBroker
+from openbookscanner.broker import LocalSubscriber
 import tempfile
 from .file_server import NullFileServer
 from flask import send_file
@@ -75,7 +75,7 @@ class ConvertCommand:
         return Image(scan.get_scanner(), jpg_image, self.mime_type, directory)
 
 
-class Converter(MessageDispatcher, LocalBroker):
+class Converter(MessageDispatcher, LocalSubscriber):
     """Convert images in different ways."""
     
     def __init__(self):

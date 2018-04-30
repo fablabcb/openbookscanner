@@ -1,7 +1,7 @@
 """This module handles storage of all the files"""
 
 from .message import MessageDispatcher, message
-from openbookscanner.broker import LocalBroker
+from openbookscanner.broker import LocalSubscriber
 import tempfile
 from .file_server import FileServer
 import os
@@ -37,7 +37,7 @@ class TemporaryStorageLocation(DirectoryStorage):
         super().__init__(self.__temp_directory.name)
     
 
-class UserDefinedStorageLocation(MessageDispatcher, LocalBroker):
+class UserDefinedStorageLocation(MessageDispatcher, LocalSubscriber):
     """This gives the user the ability to define the storage location."""
     
     default_storage = TemporaryStorageLocation

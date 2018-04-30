@@ -55,7 +55,7 @@ def receive(channel):
         while True:
             time.sleep(0.5)
             for subscriber in subscribers:
-                subscriber.receive_messages()
+                subscriber.flush()
             update.batch()
     finally:
         subscriber.delete()

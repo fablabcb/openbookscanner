@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 import sys
 from openbookscanner.message import message
 import time
-from openbookscanner.broker import LocalBroker
+from openbookscanner.broker import LocalSubscriber
 import atexit
 from openbookscanner.message import MessageDispatcher
 
@@ -84,7 +84,7 @@ class FirstState(State):
         raise ValueError("Please use transition_into to get away from this state for {}!".format(self.state_machine))
 
 
-class StateMachine(LocalBroker):
+class StateMachine(LocalSubscriber):
     """This is the base class for all state machines.
     
     A state machine "stm" implements these patterns:
