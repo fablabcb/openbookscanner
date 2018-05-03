@@ -116,11 +116,25 @@ ListedImage.prototype.update = function(image) {
     this.img.src = image.url;
 }
 
+// Middle interface to communicate with the scanners
+
+var scanners = [];
+
+function ScannerInteraction(state) {
+    console.log("ScannerInteraction", state);
+    this.id = state.json.id;
+    scanners.push(this);
+}
+
+ScannerInteraction.prototype.update = function(state) {
+}
+
+
 
 const relationsToStateMachineViews = {
     "status": [Status],
     "listener": [Status], 
-    "scanner": [Status, ScannerListEntry],
+    "scanner": [Status, ScannerListEntry, ScannerInteraction],
     "storage": [Status, Storage]
 };
 

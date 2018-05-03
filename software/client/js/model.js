@@ -100,6 +100,7 @@ Model.prototype.updateModelRelation = function(relationName) {
 
 // deliver a message to the bookscanner
 Model.prototype.deliverMessage = function(message) {
+    console.log("model.deliverMessage:", message);
     this.incomingMessages.deliverMessage(message);
 }
 

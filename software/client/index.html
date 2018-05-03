@@ -1,48 +1,219 @@
 <!DOCTYPE HTML>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="description" content="OpenBookScanner">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <title>OpenBookScanner</title>
-    <link rel="stylesheet" type="text/css" href="css/index.css">
-    <link rel="stylesheet" type="text/css" href="css/lib/grid.css">
-    <link rel="stylesheet" type="text/css" href="css/fonts.css">
-    <link rel="icon" type="image/svg+xml" href="img/logo-small.svg" />
-    <script type="text/javascript" src="js/helpers.js"></script>
-    <script type="text/javascript" src="js/parse-client.js"></script>
-    <script type="text/javascript" src="js/model.js"></script>
-    <script type="text/javascript" src="js/parse/parse.js"></script>
-    <script type="text/javascript" src="js/state-machine-views.js"></script>
-    <script type="text/javascript" src="js/status-list.js"></script>
-    <script type="text/javascript" src="js/view-elements.js"></script>
-  </head>
-  <body>
-    <header class="grid-whole padded-inner">
-      <span class="title">OpenBookScanner</div>
-    </header>
-    <main class="grid-whole">
-      <a href="#images-list-heading">
-        <div id="images-list-heading" class="heading grid-whole padded-inner">Images</div>
-      </a>
-      <div id="images-list" class="grid-whole padded">
-      </div>
-      <a href="#scanner-list-heading">
-        <div id="scanner-list-heading" class="heading grid-whole padded-inner">Scanners</div>
-      </a>
-      <div id="scanner-list" class="grid-whole padded">
-      </div>
-      <a href="#status-list-heading">
-        <div id="status-list-heading" class="heading grid-whole padded-inner">Status</div>
-      </a>
-      <div id="status-list" class="grid-whole padded">
-      </div>
-    </main>
-    <footer class="grid-whole padded">
-      Dieser Dienst wird
-      <a href="https://github.com/fablabcb/openbookscanner/">auf GitHub</a>
-      entwickelt.
-      Die Lizenz ist <a href="https://opensource.org/licenses/AGPL-3.0">AGPL v3</a>.
-    </footer>
-  </body>
+    <head>
+        <meta charset="utf-8">
+        <meta name="description" content="OpenBookScanner">
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+        <title>OpenBookScanner</title>
+        <link rel="stylesheet" type="text/css" href="css/lib/grid.css">
+        <link rel="stylesheet" type="text/css" href="css/fonts.css">
+        <link rel="icon" type="image/svg+xml" href="img/logo-small.svg" />
+        <link rel="stylesheet" type="text/css" href="css/index.css">
+        <script type="text/javascript" src="js/helpers.js"></script>
+        <script type="text/javascript" src="js/parse-client.js"></script>
+        <script type="text/javascript" src="js/model.js"></script>
+        <script type="text/javascript" src="js/parse/parse.js"></script>
+        <script type="text/javascript" src="js/state-machine-views.js"></script>
+        <script type="text/javascript" src="js/status-list.js"></script>
+        <script type="text/javascript" src="js/view-elements.js"></script>
+        <script type="text/javascript" src="js/interaction.js"></script>
+    </head>
+    <body>
+        <header class="grid-whole padded-inner">
+            <div class="title grid-wholecentered">OpenBookScanner</div>
+            <div class="grid-whole ready" id="status-overview">
+                <!-- Ready to scan | scanning | error -->
+                Ready to scan
+            </div>
+        </header>
+        <main class="grid-whole">
+<!-- Overview -->
+            <div class="section grid-whole">
+                <div class="use-case s-grid-whole m-grid-half l-grid-third">
+                    <a href="#scan-heading">I want to scan.</a>
+                </div>
+                <div class="use-case s-grid-whole m-grid-half l-grid-third">
+                    I want to know more. <a href="#faq-heading">Questions &amp; Answers</a>
+                </div>
+            </div>
+<!-- FAQ -->
+            <div class="section grid-whole" id="section-faq"> 
+                <a href="#faq-heading">
+                    <div id="faq-heading" class="heading grid-whole padded-inner">Questions &amp; Answers</div>
+                </a>
+                <div class="grid-whole padded" id="faq-listing">
+                    <div class="faq grid-whole">
+                        <div class="grid-whole question">
+                            Wie kann ich die Resultate vom Scan weiterverarbeiten?
+                        </div>
+                        <div class="grid-whole answer">
+                        </div>
+                    </div>
+                    <div class="faq grid-whole">
+                        <div class="grid-whole question">
+                            Wo wird der Buchscan gespeichert?
+                        </div>
+                        <div class="grid-whole answer">
+                        </div>
+                    </div>
+                </div>
+            </div>
+<!-- Scan -->
+            <div class="section grid-whole">
+                <a href="#scan-heading">
+                    <div id="scan-heading" class="heading grid-whole padded-inner">I want to scan</div>
+                </a>
+                <div class="use-case s-grid-whole m-grid-half l-grid-third">
+                    Go to bottom.
+                </div>
+                <div class="subsection even grid-whole padded">
+                    <ul>
+                        <li>
+                            Please open the book on the first page you want to scan. TODO: Picture
+                        </li>
+                        <li>
+                            Now, put it down on the book scanner. TODO: picture
+                        </li>
+                    </ul>
+                </div>
+                <div class="subsection odd grid-whole padded">
+                    <a href="javascript:testPageSuction()" class="button l-grid-quarter m-grid-third s-grid-whole">
+                        Test Page Suction
+                    </a>
+                    <div class="slider l-grid-half m-grid-third s-grid-whole">
+                        --------|---
+                    </div>
+                    <div class="slider l-grid-half m-grid-third s-grid-whole">
+                        <input type="number" value="100" id="suction" class="grid-whole"/>
+                    </div>
+                </div>
+                <div class="subsection even grid-whole padded">
+                    <a href="javascript:testScan()" class="button l-grid-quarter m-grid-third s-grid-whole">
+                        Test Scan
+                    </a>
+                    <div class="l-grid-three-quarters m-grid-two-thirds s-grid-whole">
+                        <div class="grid-half padded-sides setting-description">
+                            Brightness:
+                        </div>
+                        <input type="number" value="100" id="settings-brightness" class="grid-half"/>
+                        <div class="grid-half padded-sides setting-description">
+                            Contrast:
+                        </div>
+                        <input type="number" value="100" id="settings-contrast" class="grid-half"/>
+                        <div class="grid-half padded-sides setting-description">
+                            DPI:
+                        </div>
+                        <input type="number" value="300" id="settings-dpi" class="grid-half"/>
+                    </div>
+                    <div class="grid-whole">
+                        <div class="s-grid-whole m-grid-half l-grid-half test-scan-image padded" id="test-scan-image-1">
+                            <img class="grid-whole">
+                            <div class="grid-whole">
+                                <div class="image-button grid-third">rotate</div>
+                                <div class="image-button grid-third">switch</div>
+                            </div>
+                        </div>
+                        <div class="s-grid-whole m-grid-half l-grid-half test-scan-image padded" id="test-scan-image-2">
+                            <img class="grid-whole">
+                            <div class="grid-whole">
+                                <div class="image-button grid-third">rotate</div>
+                                <div class="image-button grid-third">switch</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="subsection odd grid-whole padded">
+                    <a href="javascript:testPageSuction()" class="button l-grid-quarter m-grid-third s-grid-whole">
+                        Scan! | Pause Scan | Stop Scan
+                    </a>
+                    <div class="slider l-grid-three-quarters m-grid-two-thirds s-grid-whole">
+                        <div class="grid-half padded-sides setting-description">
+                            Book Name:
+                        </div>
+                        <input type="text" value="zhe baibl" id="input-book-name" class="grid-half"/>
+                        <div class="grid-half padded-sides setting-description">
+                            Pages:
+                        </div>
+                        <input type="number" value="100" id="input-number-of-pages" class="grid-half"/>
+                        <div class="grid-half padded-sides setting-description">
+                            Formats:
+                        </div>
+                        <div class="grid-quarter centered checkbox">
+                            <input type="checkbox" id="use-format-png">
+                            PDF
+                        </div>
+                        <div class="grid-quarter centered checkbox">
+                            <input type="checkbox" id="use-format-png">
+                            PNG
+                        </div>
+                        <div class="grid-half padded-sides setting-description">
+                            Storage Location:
+                        </div>
+                        <select class="grid-half">
+                            <option value="temp">save on book scanner</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <!-- Here we have the old design below. -->
+            <div class="section grid-whole">
+                <a href="#images-list-heading">
+                    <div id="images-list-heading" class="heading grid-whole padded-inner">Images</div>
+                </a>
+                <div id="images-list" class="grid-whole padded">
+                </div>
+            </div>
+            <div class="section grid-whole">
+                <a href="#scanner-list-heading">
+                    <div id="scanner-list-heading" class="heading grid-whole padded-inner">Scanning</div>
+                </a>
+                <div class="description l-grid-half m-grid-half s-grid-whole padded-sides">
+                    Here you can control the scanning process.
+                </div>
+                <div class="settings l-grid-half m-grid-half s-grid-whole padded">
+                    <div class="grid-whole">
+                        <div class="book-name-column grid-half centered">
+                            ⬇ book name ⬇
+                        </div>
+                        <div class="book-page-column grid-quarter centered">
+                            ⬇ page ⬇
+                        </div>
+                        <div class="book-format-column grid-quarter centered">
+                            ⬇ format ⬇
+                        </div>
+                    </div>
+                    <div class="grid-whole">
+                        <input type="text" id="book-name" class="book-name-column grid-half" placeholder="zhe baibl" />
+                        <input type="number" id="book-page" class="book-page-column grid-quarter" value="1" />
+                        <select class="book-format-column grid-quarter">
+                            <option value="png">.png</option>
+                            <option value="pdf">.pdf</option>
+                        </select>
+                        <!-- options to a scan:
+                          - pdf/jpeg
+                          - as one pdf
+                          - OCR
+                          - coordinated scan
+                          -  
+                          -->
+                    </div>
+                </div>
+                <div id="scanner-list" class="grid-whole padded" >
+                </div>
+            </div>
+            <div class="section grid-whole">
+                <a href="#status-list-heading">
+                    <div id="status-list-heading" class="heading grid-whole padded-inner">Status</div>
+                </a>
+                <div id="status-list" class="grid-whole padded">
+                </div>
+            </div>
+        </main>
+        <footer class="grid-whole padded">
+            Dieser Dienst wird
+            <a href="https://github.com/fablabcb/openbookscanner/">auf GitHub</a>
+            entwickelt.
+            Die Lizenz ist <a href="https://opensource.org/licenses/AGPL-3.0">AGPL v3</a>.
+        </footer>
+    </body>
 </html>

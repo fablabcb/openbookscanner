@@ -52,3 +52,9 @@ function camelCaseToSpacing(string) {
     return result;
 }
 
+// return the integer value from the field with a specific id
+function getIntValueFromId(id) {
+    var element = document.getElementById(id);
+    return JSON.parse(element.value);
+}
+
