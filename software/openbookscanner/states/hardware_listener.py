@@ -149,6 +149,7 @@ class HardwareListener(StateMachine):
         while self._new_hardware:
             new_hardware = self._new_hardware.pop()
             for observer in self._hardware_observers:
+                print('test', observer, new_hardware)
                 observer.new_hardware_detected(new_hardware)
 
     def has_new_hardware(self):

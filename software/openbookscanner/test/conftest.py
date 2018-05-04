@@ -3,10 +3,11 @@ import time
 import pytest
 from pytest import fixture
 from openbookscanner.states import State, FinalState, StateMachine, PollingState, TransitionOnReceivedMessage
-from openbookscanner.states.hardware_listener import HardwareListener
 from openbookscanner.broker import LocalBroker, ParseBroker, BufferingBroker
 from unittest.mock import Mock
 from openbookscanner.message import message
+from openbookscanner.states.hardware_listener import HardwareListener
+from openbookscanner.states.usbstick_listener import USBStickListener
 
 #import hanging_threads
 #
@@ -215,3 +216,17 @@ def timeout(condition, description=None, seconds=1, delay=0.001):
     assert condition(), "The test condition timed out" + (": " + str(description) if description else ".")
 __builtins__["timeout"] = timeout
 
+
+class TestUSBStickListenerEmpty(USBStickListener):
+
+    def __init__(self):
+        super().__init__()
+        # Overwrite initialized set with empty set
+        self._block_devices = set([])
+
+    def get_block_devices(self):
+        return set(['sdb'])
+
+@fixture
+def usle():
+    return TestUSBStickListenerEmpty()

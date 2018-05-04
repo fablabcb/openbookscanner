@@ -1,9 +1,9 @@
-from openbookscanner.states.state import StateMachine, State, FinalState
+from openbookscanner.states.state import StateMachine, State, FinalState, RunningState, PollingState
 import time
 import tempfile
 
 
-class USBStickState(State):
+class USBStickState():
 
     def can_write(self):
         return False
@@ -75,7 +75,12 @@ class USBStick(StateMachine):
         
         - device: is a path to a device in /dev/
         """
+        super().__init__()
+        self._device = device
         self.transition_into(PluggedIn())
+
+    def __repr__(self):
+        return '<{} device {} at state {}>'.format(self.__class__.__name__, self._device, self.state)
     
     def can_save_file(self):
         return self.state.can_write()
@@ -84,4 +89,8 @@ class USBStick(StateMachine):
         """Save a file on the USB Stick."""
         # if error: no space left: TODO:
         # self.state.receive_message({"type": "message", "name": "no_space_left"})
+
+    def is_USBStick(self):
+        """Tell callers if this object is a USB stick"""
+        return True
 
