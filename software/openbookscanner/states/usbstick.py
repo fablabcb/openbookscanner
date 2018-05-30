@@ -4,7 +4,7 @@ import tempfile
 import subprocess
 
 
-class USBStickState():
+class USBStickState(): # rename to mixin
 
     def can_write(self):
         return False
@@ -14,7 +14,7 @@ class USBStickState():
         d["writable"] = self.can_write()
         return d
 
-class PluggedIn(State, USBStickState):
+class PluggedIn(State, USBStickState): # TODO: Put usbstickstatemixin first
     
     def on_enter(self):
         self.transition_into(USBStickIsMounting())
@@ -92,6 +92,7 @@ class USBStick(StateMachine):
     
     def save_file(self, file):
         """Save a file on the USB Stick."""
+
         # if error: no space left: TODO:
         # self.state.receive_message({"type": "message", "name": "no_space_left"})
 
@@ -109,3 +110,18 @@ class USBStick(StateMachine):
     def is_plugged_in(self):
         return self._device in self.listener.get_block_devices()
 
+    @property
+    def label(self):
+        """The label of the USB Stick."""
+        return "TODO" # TODO
+
+    @property
+    def id(self):
+        """This identifies the USB Stick among others."""
+        return self._device + "-" + str(id(self))
+
+    def toJSON(self):
+        d = super().toJSON()
+        d["id"] = self.id
+        d["label"] = self.label
+        return d

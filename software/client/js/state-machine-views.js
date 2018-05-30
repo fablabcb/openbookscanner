@@ -129,6 +129,18 @@ function ScannerInteraction(state) {
 ScannerInteraction.prototype.update = function(state) {
 }
 
+// Menu to choose where to store the images
+
+function StorageSelectionMenuEntry(state) {
+    this.option = document.createElement("option");
+    this.container = document.getElementById("storage-listing");
+    this.container.appendChild(this.option);
+    this.update(state);
+}
+
+StorageSelectionMenuEntry.prototype.update = function(state) {
+    this.option.value = 
+}
 
 
 const relationsToStateMachineViews = {
