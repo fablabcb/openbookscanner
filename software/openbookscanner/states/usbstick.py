@@ -1,6 +1,7 @@
 from openbookscanner.states.state import StateMachine, State, FinalState, RunningState, PollingState
 import time
 import tempfile
+import subprocess
 
 
 class USBStickState():
@@ -22,11 +23,13 @@ class USBStickIsMounting(RunningState, USBStickState):
 
     def run(self):
         """Mount the USBStick"""
-        # TODO
-        path = "/media/stick"
-        # use tempfile.TemporaryDirectory()
-        if True: # it mounted
-            self.transition_into(Mounted(path))
+        # Create temporary directory
+        tempdir = tempfile.mkdtemp(prefix='openbookscanner-usbstick-')
+        # Mount USBStick to temporary directory
+        # Requires root privilege
+        p = subprocess.run(["mount", self.state_machine.get_mount_partition_path(), tempdir], stdout=subprocess.PIPE)
+        if p.returncode == 0:
+            self.transition_into(Mounted(tempdir))
         else:
             self.transition_into(ErrorMounting())
 
@@ -41,6 +44,7 @@ class Mounted(PollingState, USBStickState):
         self.path = path
     
     def poll(self):
+        """Check if USBStick is still mounted"""
         p = subprocess.run(["mount"], stdout=subprocess.PIPE)
         path = self.path.encode()
         if path not in p.stdout:
@@ -90,7 +94,14 @@ class USBStick(StateMachine):
         # if error: no space left: TODO:
         # self.state.receive_message({"type": "message", "name": "no_space_left"})
 
-    def is_USBStick(self):
+    def is_usb_stick(self):
         """Tell callers if this object is a USB stick"""
         return True
+
+    def is_scanner(self):
+        """Tell callers if this object is a scanner"""
+        return False
+
+    def get_mount_partition_path(self):
+        return "/dev/" + self._device + "1"
 
