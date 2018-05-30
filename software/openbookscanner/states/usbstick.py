@@ -47,7 +47,7 @@ class Mounted(PollingState, USBStickState):
         """Check if USBStick is still mounted"""
         p = subprocess.run(["mount"], stdout=subprocess.PIPE)
         path = self.path.encode()
-        if path not in p.stdout:
+        if path not in p.stdout or not self.state_machine.is_plugged_in():
             self.transition_into(UnMounted())
         for line in p.stdout.splitlines():
             if path in line and not b"(rw" in line:
@@ -74,13 +74,14 @@ class NoSpaceLeft(FinalState, USBStickState):
 
 class USBStick(StateMachine):
 
-    def __init__(self, device):
+    def __init__(self, device, listener):
         """Create a new USB device.
         
         - device: is a path to a device in /dev/
         """
         super().__init__()
         self._device = device
+        self.listener = listener
         self.transition_into(PluggedIn())
 
     def __repr__(self):
@@ -104,4 +105,7 @@ class USBStick(StateMachine):
 
     def get_mount_partition_path(self):
         return "/dev/" + self._device + "1"
+
+    def is_plugged_in(self):
+        return self._device in self.listener.get_block_devices()
 
