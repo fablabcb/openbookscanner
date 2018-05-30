@@ -5,6 +5,7 @@ from .update_strategy import BatchStrategy
 from .states.status import StatusStateMachine
 from .states.state import StateChangeToMessageReceiveAdapter
 from .states.scanner import ScannerListener
+from .states.usbstick_listener import USBStickListener
 from parse_rest.datatypes import Object
 from .message import message
 from .storage import UserDefinedStorageLocation
@@ -51,6 +52,9 @@ class OpenBookScanner:
         # scanner
         self.scanner_listener = self.public_state_machine("listener", ScannerListener())
         self.scanner_listener.register_hardware_observer(self)
+        # usb sticks
+        self.usb_stick_listener = self.public_state_machine("usb_stick_listener", USBStickListener())
+        self.usb_stick_listener.register_hardware_observer(self)
         # conversion
         self.converter = Converter()
         self.internal_messages.subscribe(self.converter)
@@ -74,6 +78,8 @@ class OpenBookScanner:
         print("model -> new hardware", hardware)
         if hardware.is_scanner():
             self.new_scanner_detected(hardware)
+        elif hardware.is_usb_stick():
+            self.new_usb_stick_detected(hardware)
         else:
             raise ValueError("Could not use the hardware {}.".format(hardware))
         # self.model.save() # ERROR!!
@@ -82,7 +88,11 @@ class OpenBookScanner:
         """A new scanner has been detected."""
         self.public_state_machine("scanner", scanner)
         self.incoming_messages.subscribe(scanner)
-#        scanner.notify_about_new_image(UploadingImagesObserver(self.update_strategy))
+
+    def new_usb_stick_detected(self, usb_stick):
+        """A new USB stick has been detected"""
+        self.public_state_machine("usb_stick", usb_stick)
+        self.incoming_messages.subscribe(usb_stick)
 
     def public_state_machine(self, relation, state_machine):
         """Make the state machine public"""
@@ -110,6 +120,9 @@ class OpenBookScanner:
         """Send an update message to the state machines."""
         self.scanner_listener.update()
         self.scanner_listener.update_hardware()
+        self.usb_stick_listener.update()
+        self.usb_stick_listener.update_hardware()
+
         
     def print_messages(self):
         """Attach a receiver to the message broker to print them."""

@@ -133,8 +133,10 @@ ScannerInteraction.prototype.update = function(state) {
 
 const relationsToStateMachineViews = {
     "status": [Status],
-    "listener": [Status], 
+    "listener": [Status],
+    "usb_stick_listener": [Status],
     "scanner": [Status, ScannerListEntry, ScannerInteraction],
-    "storage": [Status, Storage]
+    "storage": [Status, Storage],
+    "usb_stick": [Status]
 };
 

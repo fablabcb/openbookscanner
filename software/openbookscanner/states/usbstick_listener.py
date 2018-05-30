@@ -18,6 +18,7 @@ class USBStickListener(HardwareListener):
     def __init__(self):
         super().__init__()
 
+        '''
         p = subprocess.run(["lsblk | grep disk"], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         try:
             p.check_returncode()
@@ -26,15 +27,14 @@ class USBStickListener(HardwareListener):
             raise
             # Maybe with: self.transition_into(InitializationFailed())
 
-        self._block_devices = set([line.split()[0].decode() for line in p.stdout.splitlines()])
+        #self._block_devices = set([line.split()[0].decode() for line in p.stdout.splitlines()])
+        '''
+
+        self._block_devices = self.get_block_devices()
 
     def get_block_devices(self):
-        p = subprocess.run(["lsblk | grep disk"], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        try:
-            p.check_returncode()
-        except CalledProcessError:
-            raise
-
+        p = subprocess.run(["lsblk | grep disk"], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        
         return set([line.split()[0].decode() for line in p.stdout.splitlines()])
 
     def has_driver_support(self):
@@ -44,10 +44,11 @@ class USBStickListener(HardwareListener):
     def listen_for_hardware(self):
             
         new_block_devices = self.get_block_devices()
+        print(new_block_devices)
         
-        if len(new_block_devices) > len(self._block_devices):
-            for new_block_device in new_block_devices.difference(self._block_devices):
-                self.found_new_hardware(USBStick(new_block_device))
+        for new_block_device in new_block_devices.difference(self._block_devices):
+            print('Found new block device')
+            self.found_new_hardware(USBStick(new_block_device))
 
         self._block_devices = new_block_devices
 
