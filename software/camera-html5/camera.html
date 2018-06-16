@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+    <canvas id="canvas" width="640" height="480"></canvas>
+    <video id="video" width="640" height="480" autoplay></video>
+
+    <script type="text/javascript">
+        // With these constraints we can define an ideal video resolution
+        // TODO: Define video resolutions and fallbacks
+        var constraints = { video: true };
+
+        // The promise function (in then()) will be executed once the user
+        // has given the browser permission to use video on this page
+        // and a fitting device (that satisfies the constraints) has been found
+        navigator.mediaDevices.getUserMedia(constraints).then(function(mediaStream) {
+            
+            var canvas = document.querySelector('canvas');
+            var canvasContext = canvas.getContext('2d');
+            var video = document.querySelector('video');
+
+            video.srcObject = mediaStream;
+            // This function will only run once the video stream has been
+            // fully loaded
+            video.onloadedmetadata = function(e) {
+                // We capture a still image of the video stream on the canvas
+                canvasContext.drawImage(video, 0, 0, 640, 480);
+            };
+
+        }).catch(function(err) { console.log(err.name + ": " + err.message); });
+    </script>
+</body>
+</html>
