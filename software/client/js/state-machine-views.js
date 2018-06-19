@@ -133,13 +133,15 @@ ScannerInteraction.prototype.update = function(state) {
 
 function StorageSelectionMenuEntry(state) {
     this.option = document.createElement("option");
+    this.option.classList.add("storage-location-option");
     this.container = document.getElementById("storage-listing");
     this.container.appendChild(this.option);
     this.update(state);
 }
 
 StorageSelectionMenuEntry.prototype.update = function(state) {
-    this.option.value = 
+    this.option.value = state.json.id;
+    this.option.innerText = "USB " + state.json.label;
 }
 
 

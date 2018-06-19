@@ -4,7 +4,7 @@ import tempfile
 import subprocess
 
 
-class USBStickState(): # rename to mixin
+class USBStickStateMixin: # rename to mixin
 
     def can_write(self):
         return False
@@ -14,12 +14,12 @@ class USBStickState(): # rename to mixin
         d["writable"] = self.can_write()
         return d
 
-class PluggedIn(State, USBStickState): # TODO: Put usbstickstatemixin first
+class PluggedIn(USBStickStateMixin, State):
     
     def on_enter(self):
         self.transition_into(USBStickIsMounting())
 
-class USBStickIsMounting(RunningState, USBStickState):
+class USBStickIsMounting(USBStickStateMixin, RunningState):
 
     def run(self):
         """Mount the USBStick"""
@@ -33,10 +33,10 @@ class USBStickIsMounting(RunningState, USBStickState):
         else:
             self.transition_into(ErrorMounting())
 
-class ErrorMounting(State, USBStickState):
+class ErrorMounting(USBStickStateMixin, State):
     pass
 
-class Mounted(PollingState, USBStickState):
+class Mounted(USBStickStateMixin, PollingState):
     
     timeout = 0.1
     
@@ -60,15 +60,15 @@ class Mounted(PollingState, USBStickState):
         self.transition_into(NoSpaceLeft())
         
 
-class UnMounted(FinalState, USBStickState):
+class UnMounted(USBStickStateMixin, FinalState):
     pass
 
 
-class MountedReadOnly(FinalState, USBStickState):
+class MountedReadOnly(USBStickStateMixin, FinalState):
     pass
 
 
-class NoSpaceLeft(FinalState, USBStickState):
+class NoSpaceLeft(USBStickStateMixin, FinalState):
     pass
 
 
