@@ -95,6 +95,17 @@ public class MainActivity extends AppCompatActivity {
         //  	setJpegQuality(int quality)
         //  	setPictureSize(int width, int height)
         //  	getSupportedPictureSizes()
+        Camera.Parameters params = camera.getParameters();
+        Camera.Size maxSize = params.getSupportedPictureSizes().get(0);
+        for (Camera.Size size : params.getSupportedPictureSizes()) {
+            if (size.width >= maxSize.width && size.height > maxSize.height) {
+                maxSize = size;
+            }
+        }
+        params.setPictureSize(maxSize.width, maxSize.height);
+        Log.d(DEBUG_TAG, "Camera resolution: " + maxSize.width + "x" + maxSize.height + "px");
+        params.setJpegQuality(100); // no compression
+        camera.setParameters(params);
     }
 
     @Override
