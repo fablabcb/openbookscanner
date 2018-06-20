@@ -42,16 +42,6 @@ public class MainActivity extends AppCompatActivity {
         statusText = (TextView) findViewById(R.id.statusText);
         PackageManager pm = getApplicationContext().getPackageManager();
         hasCameraFeature =  pm.hasSystemFeature(PackageManager.FEATURE_CAMERA);
-        if (hasCameraFeature) {
-            int cameraId = findFrontFacingCamera();
-            try {
-                camera = Camera.open(cameraId);
-                cameraIsDisabled = false;
-            } catch (RuntimeException e) {
-                cameraIsDisabled = true;
-            }
-        }
-        cameraIsAvailable = hasCameraFeature && !cameraIsDisabled;
     }
 
     private int findFrontFacingCamera() {
@@ -61,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         for (int cameraId = 0; cameraId < numberOfCameras; cameraId++) {
             CameraInfo info = new CameraInfo();
             Camera.getCameraInfo(cameraId, info);
-            if (info.facing == CameraInfo.CAMERA_FACING_FRONT) {
+            if (info.facing == CameraInfo.CAMERA_FACING_BACK) {
                 Log.d(DEBUG_TAG, "Camera found");
                 return cameraId;
             }
@@ -75,31 +65,36 @@ public class MainActivity extends AppCompatActivity {
         setAttributesOnCreate();
 
 
-        statusText.setText(cameraIsAvailable ? "A camera is available." :
-                           cameraIsDisabled  ? "Camera use is disabled for this app: no permission." :
-                           !hasCameraFeature  ? "This app has no camera feature." : "TODO");
-        if (!cameraIsAvailable) {
-            // from https://androidkennel.org/android-camera-access-tutorial/
-            // imageView.setImageResource(); // TODO: not picture
-            ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE }, 0);
-        }
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (cameraIsAvailable) {
-                    camera.startPreview();
-                    camera.takePicture(null, null,
-                            new Camera.PictureCallback() {
-                                @Override
-                                public void onPictureTaken(byte[] data, Camera camera) {
-                                    Bitmap bm = BitmapFactory.decodeByteArray(data, 0, data.length);
-                                    imageView.setImageBitmap(bm);
-                                }
-                            });
-                }
+                tryToTakeAPicture();
             }
         });
+    }
+
+    private void tryToTakeAPicture() {
+        if (cameraIsAvailable) {
+            setCameraParameters();
+            camera.startPreview();
+            camera.takePicture(null, null,
+                    new Camera.PictureCallback() {
+                        @Override
+                        public void onPictureTaken(byte[] data, Camera camera) {
+                            Bitmap bm = BitmapFactory.decodeByteArray(data, 0, data.length);
+                            imageView.setImageBitmap(bm);
+                            camera.stopPreview();
+                        }
+                    });
+        }
+    }
+
+    protected void setCameraParameters() {
+        // https://developer.android.com/reference/android/hardware/Camera.Parameters
+        //  	setJpegQuality(int quality)
+        //  	setPictureSize(int width, int height)
+        //  	getSupportedPictureSizes()
     }
 
     @Override
@@ -128,10 +123,41 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         // from http://www.vogella.com/tutorials/AndroidCamera/article.html
-        if (camera != null) {
+        // see also https://developer.android.com/reference/android/hardware/Camera (10)
+        if (cameraIsAvailable) {
             camera.release();
             camera = null;
         }
         super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        // from https://developer.android.com/reference/android/hardware/Camera (10)
+
+        openCamera();
+        statusText.setText(cameraIsAvailable  ? "A camera is available." :
+                           cameraIsDisabled   ? "Camera use is disabled for this app: no permission." :
+                           !hasCameraFeature  ? "This app has no camera feature." : "TODO");
+        super.onResume();
+    }
+
+    private void openCamera() {
+        if (hasCameraFeature) {
+            int cameraId = findFrontFacingCamera();
+            try {
+                camera = Camera.open(cameraId);
+                cameraIsDisabled = false;
+            } catch (RuntimeException e) {
+                // this occurs if no permissions are given, see thedocumentation of Camera.open.
+                cameraIsDisabled = true;
+            }
+        }
+        cameraIsAvailable = hasCameraFeature && !cameraIsDisabled;
+        if (cameraIsDisabled) {
+            // from https://androidkennel.org/android-camera-access-tutorial/
+            // imageView.setImageResource(); // TODO: change picture
+            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.CAMERA}, 0);
+        }
     }
 }
