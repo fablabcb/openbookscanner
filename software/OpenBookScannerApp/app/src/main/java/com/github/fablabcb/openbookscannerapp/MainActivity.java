@@ -7,25 +7,22 @@ import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 
 public class MainActivity extends AppCompatActivity {
 
     private final static String DEBUG_TAG = "MainActivity";
 
     private ImageView imageView;
-    private FloatingActionButton fab;
     private TextView statusText;
-    private Toolbar toolbar;
+    private Button button;
     private boolean cameraIsAvailable;
     private boolean hasCameraFeature;
     private boolean cameraIsDisabled;
@@ -35,11 +32,9 @@ public class MainActivity extends AppCompatActivity {
 
     protected void setAttributesOnCreate() {
         setContentView(R.layout.activity_main);
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
         imageView = (ImageView) findViewById(R.id.imageView);
-        fab = (FloatingActionButton) findViewById(R.id.fab);
         statusText = (TextView) findViewById(R.id.statusText);
+        button = (Button) findViewById(R.id.button);
         PackageManager pm = getApplicationContext().getPackageManager();
         hasCameraFeature =  pm.hasSystemFeature(PackageManager.FEATURE_CAMERA);
     }
@@ -66,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        fab.setOnClickListener(new View.OnClickListener() {
+        button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 tryToTakeAPicture();
@@ -107,29 +102,6 @@ public class MainActivity extends AppCompatActivity {
         params.setJpegQuality(100); // no compression
         camera.setParameters(params);
     }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
 
     @Override
     protected void onPause() {
