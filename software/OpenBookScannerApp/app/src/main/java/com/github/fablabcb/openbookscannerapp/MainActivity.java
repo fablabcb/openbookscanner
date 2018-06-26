@@ -33,6 +33,7 @@ import java.util.UUID;
 public class MainActivity extends AppCompatActivity {
 
     private final static String DEBUG_TAG = "MainActivity";
+    private final static int DEFAULT_PORT = 80;
 
     private ImageView imageView;
     private TextView statusText;
@@ -174,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             return Integer.parseInt(addressPort.getText().toString());
         } catch (NumberFormatException e) {
-            return 80;
+            return DEFAULT_PORT;
         }
     }
 
