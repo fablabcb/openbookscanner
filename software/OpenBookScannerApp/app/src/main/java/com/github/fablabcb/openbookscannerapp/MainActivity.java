@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         imageView = (ImageView) findViewById(R.id.imageView);
         statusText = (TextView) findViewById(R.id.statusText);
-        button = (Button) findViewById(R.id.button);
+        button = (Button) findViewById(R.id.takePictureButton);
         PackageManager pm = getApplicationContext().getPackageManager();
         hasCameraFeature =  pm.hasSystemFeature(PackageManager.FEATURE_CAMERA);
     }
@@ -120,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
         // from https://developer.android.com/reference/android/hardware/Camera (10)
 
         openCamera();
-        statusText.setText(cameraIsAvailable  ? "A camera is available." :
+        statusText.setText(cameraIsAvailable  ? "A camera is available." :  // todo: use @string for this
                            cameraIsDisabled   ? "Camera use is disabled for this app: no permission." :
                            !hasCameraFeature  ? "This app has no camera feature." : "TODO");
         super.onResume();

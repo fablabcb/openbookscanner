@@ -1,3 +1,11 @@
 <resources>
-  <string name="app_name">Test</string>
+  <string name="app_name">OpenBookScanner</string>
+  <string name="status_text_start">Loading ...</string>
+  <string name="connect_to_server">Connect to Server</string>
+  <string name="address_input_default_text">192.168.0.109</string>
+  <string name="address_port">port</string>
+  <string name="address_ip">IP Address</string>
+    <string name="toggle_connect">Connected</string>
+  <string name="toggle_disconnect">No Server</string>
+    <string name="take_picture">Snap!</string>
 </resources>
