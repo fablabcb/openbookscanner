@@ -1,6 +1,6 @@
 """Serve the files over the web server."""
 from .message import MessageDispatcher
-from flask import Flask, abort
+from flask import abort
 from weakref import WeakValueDictionary
 import threading
 
@@ -30,12 +30,12 @@ class FileServer(MessageDispatcher):
     
     FILE_CONTENT = "/file/"
     
-    def __init__(self, port=8001):
+    def __init__(self, flask_server):
         """Create a new file server."""
-        self.app = Flask(self.__class__.__name__)
+        super().__init__()
         self.files = WeakValueDictionary()
-        self.app.route(self.FILE_CONTENT + "<id>")(self.serve_file_content_by_id)
-        self.port = port
+        self.flask_server = flask_server
+        self.flask_server.route(self.FILE_CONTENT + "<id>")(self.serve_file_content_by_id)
         
     def serve_file_content_by_id(self, id):
         """Serve a file by an id."""
@@ -57,16 +57,7 @@ class FileServer(MessageDispatcher):
         return self.FILE_CONTENT + str(file.get_id())
     
     def get_port(self):
-        """Return the port used to serve the files."""
-        return self.port
-    
-    def run(self):
-        """Run the server."""
-        self.app.run(host="0.0.0.0", port=self.port)
-       
-    def run_in_parallel(self):
-        """Run the server in parellel."""
-        thread = threading.Thread(target=self.run, daemon=True)
-        thread.start()
+        """Return the server port."""
+        return self.flask_server.get_port()
 
 

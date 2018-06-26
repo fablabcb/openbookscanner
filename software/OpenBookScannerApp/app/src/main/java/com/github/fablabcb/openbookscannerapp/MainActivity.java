@@ -33,7 +33,7 @@ import java.util.UUID;
 public class MainActivity extends AppCompatActivity {
 
     private final static String DEBUG_TAG = "MainActivity";
-    private final static int DEFAULT_PORT = 80;
+    private final static int DEFAULT_PORT = 8001;
 
     private ImageView imageView;
     private TextView statusText;
@@ -145,9 +145,9 @@ public class MainActivity extends AppCompatActivity {
         // from https://developer.android.com/reference/android/hardware/Camera (10)
 
         openCamera();
-        statusText.setText(cameraIsAvailable  ? "A camera is available." :  // todo: use @string for this
-                           cameraIsDisabled   ? "Camera use is disabled for this app: no permission." :
-                           !hasCameraFeature  ? "This app has no camera feature." : "TODO");
+        statusText.setText(cameraIsAvailable  ? R.string.camera_status_available  :
+                           cameraIsDisabled   ? R.string.camera_status_disabled   :
+                           !hasCameraFeature  ? R.string.camera_status_no_feature : R.string.TODO);
         super.onResume();
     }
 
@@ -180,11 +180,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public String getHostname() {
-        return addressPort.getText().toString();
+        return addressIP.getText().toString();
     }
 
     public URL getServerUrl() throws MalformedURLException {
-        return new URL("http://" + getHostname() + ":" + getPort() + "/scanner");
+        return new URL("http", getHostname(), getPort(), "/scanner");
     }
 
     protected void notifyServer() {
@@ -196,6 +196,7 @@ public class MainActivity extends AppCompatActivity {
             setServerStatus(R.string.server_status_malformed_url);
             return;
         }
+        Log.d(DEBUG_TAG, "URL: " + url.toString());
         // see https://www.wikihow.com/Execute-HTTP-POST-Requests-in-Android
         HttpURLConnection client;
         try {
@@ -216,6 +217,7 @@ public class MainActivity extends AppCompatActivity {
         client.addRequestProperty("Accept", "application/json");
         client.addRequestProperty("Content-Type", "application/json");
         client.setDoOutput(true);
+        client.setChunkedStreamingMode(0);
         // write data to the server
         DataOutputStream os;
         // from https://stackoverflow.com/q/42767249/1320237
@@ -231,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
         }
         try {
             os = new DataOutputStream(client.getOutputStream());
-            os.writeBytes(URLEncoder.encode(notification.toString(), "UTF-8"));
+            os.writeBytes(notification.toString());
             os.flush();
             os.close();
         } catch (IOException e) {

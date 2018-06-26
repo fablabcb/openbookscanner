@@ -10,6 +10,8 @@ from parse_rest.datatypes import Object
 from .message import message
 from .storage import UserDefinedStorageLocation
 from .conversion import Converter
+from .flask_server import FlaskServer
+from threading import Thread
 
 
 PUBLIC_MODEL_CLASS_NAME = "OpenBookScanner"
@@ -59,8 +61,10 @@ class OpenBookScanner:
         self.converter = Converter()
         self.internal_messages.subscribe(self.converter)
         self.converter.subscribe(self.internal_messages)
+        # server
+        self.flask_server = FlaskServer()
         # storage
-        self.storage_location = UserDefinedStorageLocation()
+        self.storage_location = UserDefinedStorageLocation(self.flask_server)
         self.parse_storage_location = ParseUpdater(self.storage_location, self.update_strategy)
         self.storage_location.register_state_observer(self.parse_storage_location)
         self.incoming_messages.subscribe(self.storage_location)
@@ -103,11 +107,24 @@ class OpenBookScanner:
         self.relate_to(relation, updater)
         return state_machine
 
+    def run_server(self):
+        """Run the server"""
+        self.flask_server.run()
+    
+    def run_update_loop(self):
+        """Run the update in a loop."""
+        try:
+            while 1:
+                self.update()
+                time.sleep(0.5)
+        finally:
+            self.flask_server.shutdown()
+    
     def run(self):
-         """Run the update in a loop."""
-         while 1:
-             self.update()
-             time.sleep(0.5)
+        """"Run all components."""
+        thread = Thread(target=self.run_update_loop)
+        thread.start()
+        self.run_server()
     
     def update(self):
         """Update the book scanner, send and receive messages."""

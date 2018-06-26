@@ -14,4 +14,8 @@
   <string name="server_status_send_notification_exception">Connection Error: Could not notify the server avout this app.</string>
   <string name="server_status_create_notification_exception">Connection Error: Cannot create the notification.</string>
   <string name="server_status_get_server_response">Connection Error: Could not read a response from the server.</string>
+  <string name="camera_status_available">A camera is available.</string>
+  <string name="camera_status_disabled">Camera use is disabled for this app: no permission.</string>
+  <string name="camera_status_no_feature">This app has no camera feature.</string>
+  <string name="TODO">TODO</string>
 </resources>

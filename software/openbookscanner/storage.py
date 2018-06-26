@@ -42,11 +42,11 @@ class UserDefinedStorageLocation(MessageDispatcher, LocalSubscriber):
     
     default_storage = TemporaryStorageLocation
 
-    def __init__(self):
+    def __init__(self, flask_server):
         """Create a new storage with user access."""
         super().__init__()
         self.storage = self.default_storage()
-        self.server = FileServer()
+        self.server = FileServer(flask_server)
         self.state_observers = []
         
     def receive_new_image(self, message):
@@ -73,9 +73,6 @@ class UserDefinedStorageLocation(MessageDispatcher, LocalSubscriber):
         """Return a JSON represenation."""
         return {"type": self.__class__.__name__, "storage": self.storage.toJSON(), 
                 "description": self.__class__.__doc__}
-        
-    def run_in_parallel(self):
-        """Run the server in parellel."""
-        self.server.run_in_parallel()
+
 
 
