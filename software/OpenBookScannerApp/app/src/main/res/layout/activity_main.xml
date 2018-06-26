@@ -45,7 +45,7 @@
                     android:layout_height="wrap_content"
                     android:ems="10"
                     android:hint="@string/address_port"
-                    android:inputType="numberDecimal"
+                    android:inputType="number"
                     android:selectAllOnFocus="true"
                     android:singleLine="true"
                     android:visibility="visible" />

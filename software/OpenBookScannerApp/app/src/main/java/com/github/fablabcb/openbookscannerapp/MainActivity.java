@@ -171,7 +171,11 @@ public class MainActivity extends AppCompatActivity {
 
     public int getPort() {
         // from https://stackoverflow.com/a/25804635/1320237
-        return Integer.parseInt( addressPort.getText().toString() );
+        try {
+            return Integer.parseInt(addressPort.getText().toString());
+        } catch (NumberFormatException e) {
+            return 80;
+        }
     }
 
     public String getHostname() {
