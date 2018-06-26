@@ -22,6 +22,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:25.4.0'
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+    // implementation 'com.parse:parse-android:1.17.3' // http://docs.parseplatform.org/android/guide/ needs version 14+
     testImplementation 'junit:junit:4.12'
 
     // this is the last support test for api >= 9
