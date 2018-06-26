@@ -8,4 +8,10 @@
     <string name="toggle_connect">Connected</string>
   <string name="toggle_disconnect">No Server</string>
     <string name="take_picture">Snap!</string>
+    <string name="server_status_malformed_url">Cannot connect: Invalid URL</string>
+  <string name="server_status_connection_error">Cannot connect: no address for server</string>
+  <string name="server_status_protocol_exception">Cannot Connect: Protocol Exception: POST not supported</string>
+  <string name="server_status_send_notification_exception">Connection Error: Could not notify the server avout this app.</string>
+  <string name="server_status_create_notification_exception">Connection Error: Cannot create the notification.</string>
+  <string name="server_status_get_server_response">Connection Error: Could not read a response from the server.</string>
 </resources>
