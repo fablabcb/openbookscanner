@@ -9,6 +9,8 @@ This app is compatible with old phones until Android 2.3.
 The OpenBookScannerApp requires this API endpoint:
 
 - `POST /scanner` with data
+  Headers:
+  - `Content-Type: application/json`
   ```
   {
     "type": "scanner",
@@ -20,7 +22,9 @@ The OpenBookScannerApp requires this API endpoint:
   - `type` is `"scanner"` because this is what the app is going to do.
   - `name` is the name of the device which should be displayed.
   - `id` is the id of the scanner as there might be multiple devices of the same name.
-  This results in `200`
+  This results in `200`.
+  Headers:
+  - `Content-Type: application/json`
   - if no picture shall be taken:
     ```
     {
@@ -40,7 +44,10 @@ The OpenBookScannerApp requires this API endpoint:
   - `refresh` is the seconds as float
      when to re-post to keep the scanner active.
   - `picture` is the full url including `http://hostname:port/path` where
-    to post the picture once taken.
+    to post the picture once taken.  
+    Method: `POST`
+    Headers:
+    - `Content-Type: image/jpeg`
 
 ## Thanks
 
