@@ -12,9 +12,14 @@ The OpenBookScannerApp requires this API endpoint:
   ```
   {
     "type": "scanner",
-    "name": "<name of the phone>"
+    "name": "<name of the phone>",
+    "id": "random id for this run of the app"
   }
   ```
+  The attributes have the following meaning:
+  - `type` is `"scanner"` because this is what the app is going to do.
+  - `name` is the name of the device which should be displayed.
+  - `id` is the id of the scanner as there might be multiple devices of the same name.
   This results in `200`
   - if no picture shall be taken:
     ```
@@ -36,7 +41,6 @@ The OpenBookScannerApp requires this API endpoint:
      when to re-post to keep the scanner active.
   - `picture` is the full url including `http://hostname:port/path` where
     to post the picture once taken.
-
 
 ## Thanks
 
