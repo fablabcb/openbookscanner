@@ -125,7 +125,7 @@ class OpenBookScanner:
     
     def run(self):
         """"Run all components."""
-        thread = Thread(target=self.run_update_loop)
+        thread = Thread(target=self.run_update_loop, daemon=True)
         thread.start()
         self.run_server()
     
