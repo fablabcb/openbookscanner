@@ -3,36 +3,40 @@
 """
 from flask import Flask, request
 from urllib.request import urlopen
-
+from functools import wraps
+import traceback
 
 class FlaskServer:
     """A flask server."""
-    
-    debug = True
 
     def __init__(self, port=8001):
         """Create a new file server."""
         self.port = port
         self._app = Flask(self.__class__.__name__)
-        self._running = False
         
     def route(self, *args, **kw):
         """Create a route on the flask app."""
-        return self._app.route(*args, **kw)
+        add_to_route = self._app.route(*args, **kw)
+        @wraps(add_to_route)
+        def wrap(func):
+            @wraps(func)
+            def error_printing_func(*args, **kw):
+                """Let us know if there is an error even if we are not in production."""
+                try:
+                    return func(*args, **kw)
+                except:
+                    traceback.print_exc()
+                    raise
+            return add_to_route(error_printing_func)
+        return wrap
 
     def run(self, **kw):
         """Run the server."""
-        assert not self._running, "A server can only be started once. " \
-                                  "Use is_running() to check!"
-        self.running = True
-        try:
-            self._app.run(host="0.0.0.0", port=self.port, **kw)
-        finally:
-            self._running = False
-        
+        self._app.run(host="0.0.0.0", port=self.port, **kw)
+
     def is_running(self):
         """Return whether the server is running."""
-        return self._running
+        return True # TODO: use a more robust algorithm
     
     def get_port(self):
         """Return the port used to serve the files."""
