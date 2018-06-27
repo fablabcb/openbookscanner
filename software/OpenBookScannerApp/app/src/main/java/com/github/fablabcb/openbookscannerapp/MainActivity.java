@@ -189,6 +189,7 @@ public class MainActivity extends AppCompatActivity {
 
     protected void notifyServer() {
         URL url;
+        setServerStatus(R.string.server_status_starting_request);
         try {
             url = getServerUrl();
         } catch (MalformedURLException e) {
@@ -246,10 +247,11 @@ public class MainActivity extends AppCompatActivity {
             Log.i("STATUS", String.valueOf(client.getResponseCode()));
             Log.i("MSG" , client.getResponseMessage());
         } catch (IOException e) {
-            setServerStatus(R.string.server_status_get_server_response);
+            setServerStatus(R.string.server_status_get_server_response_error);
             e.printStackTrace();
             return;
         }
+        setServerStatus(R.string.server_status_get_server_response);
 
     }
 

@@ -6,7 +6,7 @@
 from .hardware_listener import HardwareListener
 from .state import StateMachine, MessageReceivingTransition, TimingOut
 from flask import request
-from pprint import pprint
+import json
 
 class ScannerAppStateMixin:
     """Functionality for all scanner app states."""
@@ -61,6 +61,12 @@ class ScannerApp(StateMachine):
     APP_TIMES_OUT_IF_NOT_RESPONDING_AFTER_SECONDS = 1
     
     first_state = ReadyToScan
+    
+    def __init__(self, id, name, server):
+        self.id = id
+        self.name = name
+        self.server = server
+        super().__init__()
         
     def get_notification_response(self):
         """Respond to the app."""
@@ -93,7 +99,7 @@ class ScannerAppListener(HardwareListener):
         app = self._apps.get(id, None)
         if not app:
             self._apps[id] = app = ScannerApp(id, name, self._server)
-        return app.get_notification_response()
+        return json.dumps(app.get_notification_response(), indent=4)
     
     def has_driver_support(self):
         """The apps are only supported when the server runs."""
