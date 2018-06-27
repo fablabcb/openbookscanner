@@ -74,7 +74,6 @@ class OpenBookScanner:
         self.incoming_messages.subscribe(self.storage_location)
         self.internal_messages.subscribe(self.storage_location)
         self.storage_location.subscribe(self.internal_messages)
-        self.storage_location.run_in_parallel()
         self.relate_to("storage", self.parse_storage_location)
     
     def relate_to(self, relation, updater):
