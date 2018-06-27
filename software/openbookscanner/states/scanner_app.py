@@ -4,9 +4,12 @@
 
 
 from .hardware_listener import HardwareListener
-from .state import StateMachine, MessageReceivingTransition, TimingOut
+from .state import StateMachine, State
 from flask import request
 import json
+import time
+from urllib.parse import quote
+
 
 class ScannerAppStateMixin:
     """Functionality for all scanner app states."""
@@ -18,60 +21,108 @@ class ScannerAppStateMixin:
     def is_connected(self):
         """Whether the app is connected."""
         return True
-    
-
-class ReadyToScan(TimingOut, ScannerAppStateMixin):
-    """The app is ready to scan and waiting for the app to reach out again."""
-    
-    def state_when_the_timeout_was_reached(self):
-        """When the timeout was reached, the app is not reponding."""
-        return NotReponding()
+        
+    def wants_to_scan(self):
+        """Whether a scan is requested."""
+        return False
+        
+    def toJSON(self):
+        """Return a JSON representation of the state."""
+        data = super().toJSON()
+        data["can_scan"] = self.can_scan()
+        data["is_connected"] = self.is_connected()
+        data["wants_to_scan"] = self.wants_to_scan()
+        return data
     
     @property
-    def timeout_seconds(self):
-        """This is the time in which the app is expected to respond back."""
-        return self.state_machine.APP_TIMES_OUT_IF_NOT_RESPONDING_AFTER_SECONDS
+    def app(self):
+        """Same as self.state_machine."""
+        return self.state_machine
+
+    def check_timing(self):
+        if self.app.seconds_until_app_should_refresh > 0:
+            next = ReadyToScan
+        elif self.app.seconds_until_app_is_timed_out > 0:
+            next = NotRefreshing
+        else:
+            next = Gone
+        if self.__class__ != next: # avoid changes to same state
+            self.transition_into(next())
+
+
+class ReadyToScan(State, ScannerAppStateMixin):
+    """The app is ready to scan and waiting for the app to reach out again."""
+
+    def receive_update(self, message):
+        """The state is updated."""
+        self.check_timing()
 
     def can_scan(self):
         """Whether the app is able to scan right now."""
         return True
 
-    def notification_from_app(self):
-        """The app is there again!"""
-        self.transition_into(ReadyToScan())
-    
 
+class NotRefreshing(ReadyToScan):
+    """The app is not responding when it is expected to."""
 
-class NotReponding(MessageReceivingTransition, ScannerAppStateMixin):
-    """The app is not responding then it is expected to."""
     
-    def notification_from_app(self):
-        """The app is there again!"""
-        self.transition_into(ReadyToScan())
+class Gone(State, ScannerAppStateMixin):
+    """The app seems to be gone and is not responding."""
     
+    def receive_update(self, message):
+        """The state is updated."""
+        self.check_timing()
+
     def is_connected(self):
         """Whether the app is connected."""
         return False
 
 
+class Scanning(State):
+    """The app is scanning a picure."""
+        
+    def wants_to_scan(self):
+        """Whether a scan is requested."""
+        return True
+
 class ScannerApp(StateMachine):
     """A state machine for the scanner app."""
 
     REFRESH_APP_AFTER_SECONDS = 0.5
-    APP_TIMES_OUT_IF_NOT_RESPONDING_AFTER_SECONDS = 1
+    APP_TIMES_OUT_IF_NOT_RESPONDING_AFTER_SECONDS = 5
     
     first_state = ReadyToScan
     
     def __init__(self, id, name, server):
+        super().__init__()
         self.id = id
         self.name = name
         self.server = server
-        super().__init__()
+        self.create_notification_response()
         
-    def get_notification_response(self):
+    @property
+    def seconds_until_app_should_refresh(self):
+        """Seconds until the app should notify again."""
+        # TODO: change the refresh interval depending on when the next scan is expected
+        delta = self.last_notification + self.REFRESH_APP_AFTER_SECONDS - time.time()
+        delta = min(self.seconds_until_app_is_timed_out, delta)
+        return (delta if delta > 0 else 0)
+        
+    @property
+    def seconds_until_app_is_timed_out(self):
+        """Seconds after which we assume the app to be gone."""
+        delta = self.last_notification + self.APP_TIMES_OUT_IF_NOT_RESPONDING_AFTER_SECONDS - time.time()
+        return (delta if delta > 0 else 0)
+        
+    def create_notification_response(self):
         """Respond to the app."""
-        return {"status": "ok",
-                "refresh": self.REFRESH_APP_AFTER_SECONDS} # TODO: change the refresh interval depending on when the next scan is expected
+        self.last_notification = time.time()
+        data = {"status": "ok",
+                "refresh": self.seconds_until_app_should_refresh, 
+                "timeout": self.seconds_until_app_is_timed_out}
+        if self.state.wants_to_scan():
+            data["picture"] = self.state.get_picture_url()
+        return data
 
 
 class ScannerAppListener(HardwareListener):
@@ -85,6 +136,7 @@ class ScannerAppListener(HardwareListener):
         self._server = flask_server
         self._server.route("/scanner", methods=["POST"])(self._post_scanner)
         self._apps = {} # id : app
+        self._new_apps = []
         super().__init__()
     
     def _post_scanner(self):
@@ -93,13 +145,15 @@ class ScannerAppListener(HardwareListener):
         print(__name__, "_post_scanner:", data)
         assert data.get("type") == "scanner", "The type attribute must be set to scanner to indicate the willingness to scan."
         name = data.get("name")
-        assert isinstance(name, str), "The name MUST be a string so we can display it tothe user."
+        assert isinstance(name, str), "The name MUST be a string so we can display it to the user."
         id = data.get("id")
         assert isinstance(id, str), "The id must be a string so we can compare it to other ids."
         app = self._apps.get(id, None)
         if not app:
             self._apps[id] = app = ScannerApp(id, name, self._server)
-        return json.dumps(app.get_notification_response(), indent=4)
+            self.found_new_hardware(app)
+            app.print_state_changes()
+        return json.dumps(app.create_notification_response(), indent=4)
     
     def has_driver_support(self):
         """The apps are only supported when the server runs."""
@@ -114,7 +168,8 @@ def main():
     from ..flask_server import FlaskServer
     server = FlaskServer()
     listener = ScannerAppListener(server)
+    listener.print_state_changes()
     listener.run_update_loop_in_parallel()
-    server.run(debug=True)
+    server.run()
 
 

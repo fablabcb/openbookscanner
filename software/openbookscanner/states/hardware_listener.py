@@ -3,6 +3,7 @@
 """
 
 from .state import StateMachine, PollingState, State, TransitionOnReceivedMessage
+import time
 
 
 class Checks:
@@ -161,3 +162,12 @@ class HardwareListener(StateMachine):
         for hardware in self.get_hardware():
             hardware.update()
 
+    def run_update_loop(self, seconds_between_updates=0.5):
+        """Run the update messages in a loop.
+        
+        Also update all the detected hardware state machines.
+        """
+        while 1:
+            self.update()
+            self.update_hardware()
+            time.sleep(seconds_between_updates)
