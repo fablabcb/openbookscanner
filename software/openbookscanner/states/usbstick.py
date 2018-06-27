@@ -4,7 +4,7 @@ import tempfile
 import subprocess
 
 
-class USBStickState():
+class USBStickStateMixin: # rename to mixin
 
     def can_write(self):
         return False
@@ -14,12 +14,12 @@ class USBStickState():
         d["writable"] = self.can_write()
         return d
 
-class PluggedIn(State, USBStickState):
+class PluggedIn(USBStickStateMixin, State):
     
     def on_enter(self):
         self.transition_into(USBStickIsMounting())
 
-class USBStickIsMounting(RunningState, USBStickState):
+class USBStickIsMounting(USBStickStateMixin, RunningState):
 
     def run(self):
         """Mount the USBStick"""
@@ -33,10 +33,10 @@ class USBStickIsMounting(RunningState, USBStickState):
         else:
             self.transition_into(ErrorMounting())
 
-class ErrorMounting(State, USBStickState):
+class ErrorMounting(USBStickStateMixin, State):
     pass
 
-class Mounted(PollingState, USBStickState):
+class Mounted(USBStickStateMixin, PollingState):
     
     timeout = 0.1
     
@@ -60,15 +60,15 @@ class Mounted(PollingState, USBStickState):
         self.transition_into(NoSpaceLeft())
         
 
-class UnMounted(FinalState, USBStickState):
+class UnMounted(USBStickStateMixin, FinalState):
     pass
 
 
-class MountedReadOnly(FinalState, USBStickState):
+class MountedReadOnly(USBStickStateMixin, FinalState):
     pass
 
 
-class NoSpaceLeft(FinalState, USBStickState):
+class NoSpaceLeft(USBStickStateMixin, FinalState):
     pass
 
 
@@ -92,6 +92,7 @@ class USBStick(StateMachine):
     
     def save_file(self, file):
         """Save a file on the USB Stick."""
+
         # if error: no space left: TODO:
         # self.state.receive_message({"type": "message", "name": "no_space_left"})
 
@@ -109,3 +110,18 @@ class USBStick(StateMachine):
     def is_plugged_in(self):
         return self._device in self.listener.get_block_devices()
 
+    @property
+    def label(self):
+        """The label of the USB Stick."""
+        return "TODO" # TODO
+
+    @property
+    def id(self):
+        """This identifies the USB Stick among others."""
+        return self._device + "-" + str(id(self))
+
+    def toJSON(self):
+        d = super().toJSON()
+        d["id"] = self.id
+        d["label"] = self.label
+        return d

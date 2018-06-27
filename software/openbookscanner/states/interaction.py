@@ -23,6 +23,7 @@ class Ready(InteractionStateMixin, State):
         """The user wishes to perform a test scan.
         
         We get a message with the settings and send this over to all the scanners.
+        A scanner MUST respond with either a message.
         """
         self.deliver_message(m)
 
