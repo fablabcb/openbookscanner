@@ -9,6 +9,8 @@ import time
 from openbookscanner.broker import LocalSubscriber
 import atexit
 from openbookscanner.message import MessageDispatcher
+from threading import Thread, RLock
+import traceback
 
 
 class State(MessageDispatcher):
@@ -31,6 +33,7 @@ class State(MessageDispatcher):
     
     def transition_into(self, new_state):
         """Use this to transition into another state."""
+        assert self.state_machine.state is self, "Can only transition from self."
         self.state_machine.transition_into(new_state)
     
     def toJSON(self):
@@ -67,14 +70,14 @@ class State(MessageDispatcher):
         """Return the string representation."""
         return "<{} at {}>".format(self.__class__.__name__, hex(id(self)))
 
-    def receive_message_from_other_state(self, message):
+    def receive_message_after_transition(self, message):
         """Receive a message from the state before this state."""
         self.receive_message(message)
     
     def is_error(self):
         """Whether this state is an error state."""
         return False
-    
+
     
 class FirstState(State):
     """This is the first state so one has a state to come from."""
@@ -118,6 +121,7 @@ class StateMachine(LocalSubscriber):
 
     def transition_into(self, state):
         """Transition into a new state."""
+        # TODO: ensure that a transition only happens from one thread
         self.state.leave(self)
         self.state = state
         self.state.enter(self)
@@ -156,6 +160,17 @@ class StateMachine(LocalSubscriber):
     def is_scanner(self):
         """Whether this state machine is a scanner."""
         return False
+    
+    def run_update_loop(self, seconds_between_updates=0.5):
+        """Run the update messages in a loop."""
+        while 1:
+            self.update()
+            time.sleep(seconds_between_updates)
+    
+    def run_update_loop_in_parallel(self, seconds_between_updates=0.5):
+        """Run the update loop in parallel."""
+        thread = Thread(target=self.run_update_loop, daemon=True)
+        thread.start()
             
 
 class FinalState(State):
@@ -194,10 +209,60 @@ def _python_exit():
 
 atexit.register(_python_exit)
 
-class RunningState(State):
 
-    next_state = _initial_next_state = DoneRunning()
+class MessageReceivingTransition(State):
+    """Transition in a thread save manner.
+    
+    The state transition takes place if messages are received.
+    This allows for thread save transitioning
+    if one calls state_machine.update().
+    """
+    def __init__(self):
+        """Create a new state"""
+        self.next_state = None
+        self.critical_section = RLock()
+
+    def is_waiting_for_a_message_to_transition_to_the_next_state(self):
+        """Return whether the state likes to transition."""
+        return self.next_state is not None
+
+    def transition_into(self, next_state):
+        """Transition into the next state but defer the transition until the parallel execution is finished.
+        
+        When the execution is finished, the next incoming message will start a transition.
+        The next state receives the message.
+        """
+        with self.critical_section:
+            assert self.next_state is None, "Can only transition once."
+            self.next_state = next_state
+            
+    def can_transition_on_message_receive(self):
+        """Whether this state can transition when a message is received."""
+        return self.is_waiting_for_a_message_to_transition_to_the_next_state()
+    
+    def receive_message(self, message):
+        """Receive a message and transition when can_transition_on_message_receive()."""
+        if self.can_transition_on_message_receive():
+            super().transition_into(self.next_state)
+            self.next_state.receive_message_after_transition(message)
+        else:
+            super().receive_message(message)
+
+
+class ErrorAfterTransition(RuntimeError):
+    """There was an error after the state machine transitioned."""
+
+
+class RunningState(MessageReceivingTransition): # TODO: refactor running state into transition and run
+    """State which runs a parrallel execution.
+    
+    Override the run() method to run this in parallel.
+    If the state did not transition during the run, 
+    the state machine transitions into the
+    done_running_state"""
+
     _stopped = False
+    done_running_state = DoneRunning
     
     def should_stop(self):
         """ Please stop running the threads.
@@ -205,16 +270,12 @@ class RunningState(State):
         The Python program is exiting right now or it should be stopped.
         """
         return _shutdown or self._stopped
-    
-    def is_waiting_for_a_message_to_transition_to_the_next_state(self):
-        """Return whether the state likes to transition."""
-        return self.next_state != self._initial_next_state
 
     def enter(self, state_machine):
         """Enter the state and start the parallel execution."""
         super().enter(state_machine)
         self.executor = ThreadPoolExecutor(max_workers=1)
-        self.future = self.executor.submit(self.run)
+        self.future = self.executor.submit(self._run)
     
     def run(self):
         """This is called when the state machine enters the state.
@@ -226,9 +287,28 @@ class RunningState(State):
         If this is True, the program is exiting right now and you should stop running.
         """
         
+    def _run(self):
+        try:
+            self.run()
+        except:
+            ty, err, tb = sys.exc_info()
+            with self.critical_section:
+                if self.is_waiting_for_a_message_to_transition_to_the_next_state():
+                    traceback.print_exception(ty, err, tb)
+                    raise ErrorAfterTransition("Could not pass the error to the state machine:", err)
+                self.transition_into(ErrorRaisingState(err))
+        else:
+            with self.critical_section:
+                if not self.is_waiting_for_a_message_to_transition_to_the_next_state():
+                    self.transition_into(self.done_running_state())
+        
     def is_running(self):
         """Whether this state is currently running."""
         return not self.future.done()
+    
+    def can_transition_on_message_receive(self):
+        """The transition can take place if the state is not running any more."""
+        return not self.is_running() and super().can_transition_on_message_receive()
         
     def wait(self, timeout=None):
         """Wait for the parallel task to finish.
@@ -237,37 +317,10 @@ class RunningState(State):
         """
         self.future.exception(timeout)
 
-    def transition_into(self, next_state):
-        """Transition into the next state but defer the transition until the parallel execution is finished.
-        
-        When the execution is finished, the next incoming message will start a transition.
-        The next state receives the message.
-        """
-        self.next_state = next_state
-    
-    def receive_message(self, message):
-        """Receive a message and transition when the parallel execution is done."""
-        if self.is_running():
-            super().receive_message(message)
-        else:
-            if self.future.exception() is not None: # Errors should never pass silently.
-                self.next_state = self.get_error_state()
-            super().transition_into(self.next_state)
-            self.next_state.receive_message_from_other_state(message)
-
-    def receive_message_from_other_state(self, message):
-        """Discard messages from previous states if I am completed."""
-        if not self.is_running():
-            super().receive_message(message)
-
     def stop(self):
         """Stop the state if it is running."""
         self._stopped = True
         self.wait()
-        
-    def get_error_state(self):
-        """Return the error state."""
-        return ErrorRaisingState(self.future.exception())
 
 
 class PollingState(RunningState):
@@ -356,7 +409,7 @@ class PrintStateChanges:
 
 
 class TimedOut(State):
-    """This is teh state when the timeout was reached."""
+    """This is the state when the timeout was reached."""
 
 
 class TimingOut(PollingState):
