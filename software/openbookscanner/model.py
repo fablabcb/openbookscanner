@@ -12,6 +12,7 @@ from .storage import UserDefinedStorageLocation
 from .conversion import Converter
 from .flask_server import FlaskServer
 from threading import Thread
+from urllib.error import URLError
 
 
 PUBLIC_MODEL_CLASS_NAME = "OpenBookScanner"
@@ -30,7 +31,10 @@ class OpenBookScanner:
         
         status(StatusStateMachine) --message--> public_message_buffer(BufferingBroker) --message---
         ---> public_message_broker(ParseBroker) --"""
-        self.create_communication_channels()
+        try:
+            self.create_communication_channels()
+        except URLError as e:
+            raise URLError("Please make sure that the parse server is started.")
         self.create_model()
             
     def create_communication_channels(self):
