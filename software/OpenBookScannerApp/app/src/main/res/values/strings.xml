@@ -1,0 +1,23 @@
+<resources>
+  <string name="app_name">OpenBookScanner</string>
+  <string name="status_text_start">Loading ...</string>
+  <string name="connect_to_server">Connect to Server</string>
+  <string name="address_input_default_text">192.168.0.109</string>
+  <string name="address_port">port</string>
+  <string name="address_ip">IP Address</string>
+    <string name="toggle_connect">Connected</string>
+  <string name="toggle_disconnect">No Server</string>
+    <string name="take_picture">Snap!</string>
+    <string name="server_status_malformed_url">Cannot connect: Invalid URL</string>
+  <string name="server_status_connection_error">Cannot connect: no address for server</string>
+  <string name="server_status_protocol_exception">Cannot Connect: Protocol Exception: POST not supported</string>
+  <string name="server_status_send_notification_exception">Connection Error: Could not notify the server avout this app.</string>
+  <string name="server_status_create_notification_exception">Connection Error: Cannot create the notification.</string>
+  <string name="server_status_get_server_response_error">Connection Error: Could not read a response from the server.</string>
+  <string name="camera_status_available">A camera is available.</string>
+  <string name="camera_status_disabled">Camera use is disabled for this app: no permission.</string>
+  <string name="camera_status_no_feature">This app has no camera feature.</string>
+  <string name="TODO">TODO</string>
+  <string name="server_status_starting_request">Notifying the server.</string>
+  <string name="server_status_get_server_response">The server returned a valid response.</string>
+</resources>
